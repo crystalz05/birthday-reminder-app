@@ -63,17 +63,18 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileAboutSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileAppearanceSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileNotificationSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfilePhotoSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileSupportSection
+import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAboutSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAppearanceSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileNotificationSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePhotoSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileEditScreen() {
+fun ProfileEditScreen(navHostController: NavHostController) {
 
     var password by remember { mutableStateOf("") }
 
@@ -93,13 +94,15 @@ fun ProfileEditScreen() {
                         }
                     },
                     navigationIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "",
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                        IconButton(onClick = {navHostController.navigateUp()},
+                            modifier = Modifier.padding(start = 10.dp, end = 20.dp)
+                        ){
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     },
                     actions = {
                         Icon(imageVector = Icons.Default.Person,

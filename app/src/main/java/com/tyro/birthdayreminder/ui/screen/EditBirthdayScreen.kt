@@ -40,6 +40,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -63,17 +64,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tyro.birthdayreminder.screen.add_birthday_components.AddBirthdaySecondPage
-import com.tyro.birthdayreminder.screen.add_birthday_components.AddBirthdayThirdPage
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.screen.add_birthday_components.EditBirthdayFirstPage
 import com.tyro.birthdayreminder.screen.add_birthday_components.EditBirthdaySecondPage
 import com.tyro.birthdayreminder.screen.add_birthday_components.EditBirthdayThirdPage
+import com.tyro.birthdayreminder.ui.screen.add_birthday_components.AddBirthdaySecondPage
+import com.tyro.birthdayreminder.ui.screen.add_birthday_components.AddBirthdayThirdPage
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditBirthdayScreen() {
+fun EditBirthdayScreen(navHostController: NavHostController) {
 
     var fullName by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
@@ -84,7 +86,7 @@ fun EditBirthdayScreen() {
 
     val canProceed by remember { derivedStateOf { fullName.isNotBlank() && selectedDate.isNotBlank()} }
 
-    var currentTab by remember { mutableStateOf("Contact") }
+    var currentTab by remember { mutableStateOf("Personal") }
 
     val tabs = listOf(
         "Personal" to Icons.Default.Person,
@@ -105,13 +107,15 @@ fun EditBirthdayScreen() {
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground) },
                     navigationIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "",
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                        IconButton(onClick = {navHostController.navigateUp()},
+                            modifier = Modifier.padding(start = 10.dp, end = 20.dp)
+                        ){
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
@@ -273,10 +277,10 @@ fun TabItem(
     }
 }
 
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun EditBirthdayScreenPreview(){
-    BirthdayReminderTheme {
-        EditBirthdayScreen()
-    }
-}
+//@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
+//@Composable
+//fun EditBirthdayScreenPreview(){
+//    BirthdayReminderTheme {
+//        EditBirthdayScreen()
+//    }
+//}

@@ -4,9 +4,11 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +22,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -37,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.ui.screen.add_birthday_components.AddBirthdayFirstPage
 import com.tyro.birthdayreminder.ui.screen.add_birthday_components.AddBirthdaySecondPage
 import com.tyro.birthdayreminder.ui.screen.add_birthday_components.AddBirthdayThirdPage
@@ -44,7 +48,7 @@ import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddBirthdayScreen() {
+fun AddBirthdayScreen(navHostController: NavHostController) {
 
     var fullName by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
@@ -67,13 +71,15 @@ fun AddBirthdayScreen() {
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground) },
                     navigationIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "",
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                        IconButton(onClick = {navHostController.navigateUp()},
+                            modifier = Modifier.padding(start = 10.dp, end = 20.dp)
+                        ){
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
@@ -113,18 +119,18 @@ fun AddBirthdayScreen() {
 
 
     ) {innerPadding ->
+            AddBirthdayFirstPage(
+                innerPadding,
+                selectedDate = selectedDate,
+                onSelectedDateChange = {
+                    selectedDate = it
+                },
+                fullName = fullName,
+                onFullNameChange = {
+                    fullName = it
+                }
+            )
 
-        AddBirthdayFirstPage(
-            innerPadding,
-            selectedDate = selectedDate,
-            onSelectedDateChange = {
-                selectedDate = it
-            },
-            fullName = fullName,
-            onFullNameChange = {
-                fullName = it
-            }
-        )
 //        AddBirthdaySecondPage(
 //            innerPadding,
 //            phoneNumber = phoneNumber,
@@ -140,13 +146,5 @@ fun AddBirthdayScreen() {
 //        AddBirthdayThirdPage(
 //            innerPadding
 //        )
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun AddBirthdayScreenPreview(){
-    BirthdayReminderTheme {
-        AddBirthdayScreen()
     }
 }

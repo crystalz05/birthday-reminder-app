@@ -4,6 +4,7 @@ import android.content.ClipData.Item
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,12 +44,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.navigation.Screen
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TodayBirthday(){
+fun TodayBirthday(navHostController: NavHostController){
 
     val items = (1..3).toList()
 //    val items = emptyList<String>()
@@ -121,7 +124,7 @@ fun TodayBirthday(){
             }
         }
         items(items.size) {
-            Card(modifier = Modifier.fillMaxWidth()
+            Card(modifier = Modifier.fillMaxWidth().clickable {navHostController.navigate(Screen.BirthDayDetail.route)  }
                 .padding(top = if (it == 0) 5.dp else 0.dp), // ✅ Push first item down ,
                 colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.2f),
                     contentColor = Color.White), shape = RoundedCornerShape(8.dp)
@@ -170,8 +173,8 @@ fun TodayBirthday(){
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun TodayBirthdayPreview(){
-    TodayBirthday()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun TodayBirthdayPreview(){
+//    TodayBirthday()
+//}

@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -34,12 +34,16 @@ import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.navigation.Screen
 
 @Composable
-fun ProfilePhotoSection(navHostController: NavHostController){
-    Card(modifier = Modifier.shadow(elevation = 0.dp, shape = RoundedCornerShape(6.dp), clip = false)
+fun ProfilePhotoSection_2(navHostController: NavHostController){
+    Card(modifier = Modifier.shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp), clip = false)
+        .background(color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(6.dp)
+        )
         .border(width = 2.dp, color = Color.Transparent, shape = RoundedCornerShape(6.dp))
-        .padding(16.dp), colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        .padding(16.dp),
         content = {
-            Box(modifier = Modifier.fillMaxWidth(),
+            Box(modifier = Modifier.fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -53,6 +57,14 @@ fun ProfilePhotoSection(navHostController: NavHostController){
                                 .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape).padding(6.dp),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd) // places it at top-right corner of the Box
+                                .background(color = MaterialTheme.colorScheme.primary.copy(0.5f), shape = CircleShape).padding(6.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                     Spacer(Modifier.height(8.dp))
                     Text("Paul Michael",
@@ -63,6 +75,11 @@ fun ProfilePhotoSection(navHostController: NavHostController){
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
                         fontWeight = FontWeight.Normal)
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedButton(onClick = {navHostController.navigate(Screen.AccountVerification.route)}, shape = RoundedCornerShape(4.dp)) {
+                        Text("Edit Profile", style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
         }

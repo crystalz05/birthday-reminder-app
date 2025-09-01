@@ -45,11 +45,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 
 @Composable
-fun SignupScreen() {
+fun SignupScreen(navHostController: NavHostController) {
 
     var fullname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -57,8 +59,6 @@ fun SignupScreen() {
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by rememberSaveable { mutableStateOf(false) }
     var termsCheck by remember { mutableStateOf(false) }
-
-
 
 
     Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
@@ -125,7 +125,7 @@ fun SignupScreen() {
                         enabled = termsCheck,
                         shape = RoundedCornerShape(16))
                     {
-                        Text("Sign in")
+                        Text("Sign up")
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         HorizontalDivider(thickness = 1.dp, modifier = Modifier.weight(1f))
@@ -146,7 +146,7 @@ fun SignupScreen() {
                         Text("Google")
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    TextButton(onClick = {}, modifier = Modifier.fillMaxWidth()){
+                    TextButton(onClick = {navHostController.navigate(Screen.Login.route)}, modifier = Modifier.fillMaxWidth()){
                         Text("Already have an account? Sign in", textAlign = TextAlign.Center)
                     }
                 }
@@ -155,10 +155,10 @@ fun SignupScreen() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun SignupScreenPreview(){
-    BirthdayReminderTheme {
-        SignupScreen()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun SignupScreenPreview(){
+//    BirthdayReminderTheme {
+//        SignupScreen()
+//    }
+//}

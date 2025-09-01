@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "667390673330",
+    "project_id": "birthday-reminder-app-96277",
+    "storage_bucket": "birthday-reminder-app-96277.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:667390673330:android:80ab61e5fb6279b87b24ab",
+        "android_client_info": {
+          "package_name": "com.tyro.birthdayreminder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMRVGozEuYQByINZKDflxU-3Z6yjw5XZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

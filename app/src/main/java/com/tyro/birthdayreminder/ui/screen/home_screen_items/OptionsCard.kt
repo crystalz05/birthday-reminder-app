@@ -32,11 +32,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.navigation.Screen
 
 
 @Composable
-fun OptionsCard(){
+fun OptionsCard(navHostController: NavHostController, onclick:()->Unit){
 
     Card(modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
@@ -48,7 +50,7 @@ fun OptionsCard(){
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp)){
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(onClick = {}, modifier = Modifier.background(shape = CircleShape,
+                    IconButton(onClick = {navHostController.navigate(Screen.AddBirthDay.route)}, modifier = Modifier.background(shape = CircleShape,
                         color = Color(0xFFF44336)
                     )) {
                         Icon(painterResource(id = R.drawable.round_person_add_alt_24), contentDescription = "")
@@ -66,7 +68,7 @@ fun OptionsCard(){
                     Text("Find Birthday", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(onClick = {}, modifier = Modifier.background(shape = CircleShape,
+                    IconButton(onClick = {onclick()}, modifier = Modifier.background(shape = CircleShape,
                         color = Color(0xFF9C27B0)
                     )) {
                         Icon(Icons.Default.DateRange, contentDescription = "")
@@ -75,7 +77,7 @@ fun OptionsCard(){
                     Text("View Calendar", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(onClick = {}, modifier = Modifier.background(shape = CircleShape,
+                    IconButton(onClick = {navHostController.navigate(Screen.Stats.route)}, modifier = Modifier.background(shape = CircleShape,
                         color = Color(0xFF2196F3)
                     )) {
                         Icon(painterResource(id = R.drawable.baseline_align_vertical_bottom_24), contentDescription = "")
@@ -139,8 +141,8 @@ fun OptionsCard(){
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun OptionsCardPreview(){
-    OptionsCard()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun OptionsCardPreview(){
+//    OptionsCard()
+//}

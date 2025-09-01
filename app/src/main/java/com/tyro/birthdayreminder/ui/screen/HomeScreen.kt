@@ -1,5 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,24 +65,35 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tyro.birthdayreminder.screen.home_screen_items.OptionsCard
-import com.tyro.birthdayreminder.screen.home_screen_items.TodayBirthday
-import com.tyro.birthdayreminder.screen.home_screen_items.UpComingBirthdays
+import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.ui.screen.home_screen_items.OptionsCard
+import com.tyro.birthdayreminder.ui.screen.home_screen_items.TodayBirthday
+import com.tyro.birthdayreminder.ui.screen.home_screen_items.UpComingBirthdays
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
+import java.time.YearMonth
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavHostController) {
 
     var currentTab by remember { mutableStateOf("Home") }
 
     val tabs = listOf(
-        "Home" to Icons.Outlined.Home,
-        "Calendar" to Icons.Outlined.DateRange,
-        "Contact" to Icons.Outlined.AccountBox,
-        "Profile" to Icons.Outlined.Person
+        TabItem("Home", Icons.Outlined.Home, ""),
+        TabItem("Contact", Icons.Outlined.AccountBox, ""),
+        TabItem("Calendar", Icons.Outlined.DateRange, ""),
+        TabItem("Profile", Icons.Outlined.Person, ""),
+        )
+    val selectedIndex  = tabs.indexOfFirst { it.title == currentTab }
+        .takeIf { it != -1 } ?: 0
+
+    val currentYearMonth = YearMonth.now()
+    val pagerState = rememberPagerState(
+        initialPage = currentYearMonth.year * 12 + (currentYearMonth.monthValue - 1),
+        pageCount = { Int.MAX_VALUE } // effectively "infinite" months
     )
-    val selectedIndex  = tabs.indexOfFirst { it.first == currentTab }
 
     Scaffold(
         topBar = {
@@ -88,7 +103,8 @@ fun HomeScreen() {
                 title ={Text("", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(16.dp))},
                 navigationIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 16.dp).clickable {navController.navigate(Screen.ProfileSetting.route)}) {
                         Box(modifier = Modifier
                             .size(50.dp, 50.dp)
                             .border(
@@ -111,21 +127,21 @@ fun HomeScreen() {
                     IconButton(onClick = {}) {
                         Icon(imageVector = Icons.Outlined.Search, contentDescription = "")
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {navController.navigate(Screen.Notification.route)}) {
                         Icon(imageVector = Icons.Outlined.Notifications, contentDescription = "")
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {navController.navigate(Screen.ProfileSetting.route)}) {
                         Icon(imageVector = Icons.Outlined.Settings, contentDescription = "")
                     }
                 },
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = {}, shape = CircleShape, containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) {
-                Icon(Icons.Default.Add, contentDescription = "")
-
-            }
-        },
+//        floatingActionButton = {
+//            FloatingActionButton(onClick = {navController.navigate(Screen.AddBirthDay.route)}, shape = CircleShape, containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) {
+//                Icon(Icons.Default.Add, contentDescription = "")
+//
+//            }
+//        },
         bottomBar = {
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.background,
@@ -134,98 +150,73 @@ fun HomeScreen() {
 
                 TabRow(selectedTabIndex = selectedIndex) {
                     tabs.forEachIndexed {
-                        index, (title, icon)->
+                        index, tab ->
                         Tab(
                          selected = selectedIndex == index,
-                            onClick = {currentTab = title},
-                            text = { Text(title) },
-                            icon = {Icon(icon, contentDescription = null)}
+                            onClick = {currentTab = tab.title},
+                            text = { Text(tab.title) },
+                            icon = {Icon(tab.icon, contentDescription = null)}
                         )
                     }
                 }
-//                Row(modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(bottom = 4.dp)
-//                    .fillMaxHeight()){
-//                    Box(modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxHeight(), Alignment.Center){
-//                        BottomAppBarItem(icon = Icons.Outlined.Home, text = "Home", isSelected = selectedItem == "Home", onClick = {selectedItem = "Home"})
-//                    }
-//                    Box(modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxHeight(), Alignment.Center){
-//                        BottomAppBarItem(icon = Icons.Outlined.DateRange, text = "Calender", isSelected = selectedItem == "Calendar", onClick = {selectedItem = "Calendar"})
-//                    }
-//                    Box(modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxHeight(), Alignment.Center){
-//                        BottomAppBarItem(icon = Icons.Outlined.AccountBox, text = "Contact", isSelected = selectedItem == "Contact", onClick = {selectedItem = "Contact"})
-//                    }
-//                    Box(modifier = Modifier
-//                        .weight(1f)
-//                        .fillMaxHeight(), Alignment.Center){
-//                        BottomAppBarItem(icon = Icons.Outlined.Person, text = "Profile", isSelected = selectedItem == "Profile", onClick = {selectedItem = "Profile"})
-//                    }
-//                }
             }
         },
         content = { innerPadding ->
-            LazyColumn(Modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface)
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)) {
 
-                item{
-                    Spacer(Modifier.height(8.dp))
-                    TodayBirthday()
-                    Spacer(Modifier.height(16.dp))
-                    OptionsCard()
-                    Spacer(Modifier.height(16.dp))
-                    UpComingBirthdays()
-                    Spacer(Modifier.height(8.dp))
-                }
+            when(currentTab){
+
+                "Home" ->
+                    LazyColumn(Modifier
+                        .fillMaxSize()
+                        .background(color = MaterialTheme.colorScheme.surface)
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp)) {
+
+                        item{
+                            Spacer(Modifier.height(8.dp))
+                            TodayBirthday(navController)
+                            Spacer(Modifier.height(16.dp))
+                            OptionsCard(navController, onclick = {currentTab = "Calendar"})
+                            Spacer(Modifier.height(16.dp))
+                            UpComingBirthdays(navController)
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                "Calendar"->
+                    Column(modifier = Modifier.padding(innerPadding)) {
+                        HorizontalPager(state = pagerState) { page ->
+                            val year = page / 12
+                            val month = (page % 12) + 1
+                            CalendarMonth(year, month)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Special notes", modifier = Modifier.padding(start = 16.dp))
+                        }
+                    }
+                "Contact"->
+                    Column(modifier = Modifier.padding(innerPadding)) {
+                        ContactScreen()
+                    }
+                "Profile"->
+                    Column(modifier = Modifier.padding(innerPadding)) {
+                        ProfileScreen(navController)
+                    }
             }
         }
     )
-
 }
 
-@Composable
-fun BottomAppBarItem(
-    icon: ImageVector,
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
+data class TabItem(
+    val title: String,
+    val icon: ImageVector,
+    val route: String
 )
-{
-    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else Color.Transparent
-    val interactionSource = remember { MutableInteractionSource() }
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
-    val borderColor = if(isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent
 
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(10.dp))
-            .background(
-                shape = RoundedCornerShape(10.dp),
-                color = backgroundColor
-            )
-            .size(80.dp)
-            .clickable(interactionSource = interactionSource, indication = null) { onClick() }) {
-        Icon(icon, contentDescription = "", tint = contentColor)
-        Text(text, color = contentColor)
-        if(isSelected) Text("•", color = contentColor)
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview(){
-    BirthdayReminderTheme {
-        HomeScreen()
-    }
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun HomeScreenPreview(){
+//    BirthdayReminderTheme {
+//        HomeScreen()
+//    }
+//}

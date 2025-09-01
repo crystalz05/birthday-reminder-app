@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,12 +48,7 @@ fun ProfileNotificationSection(){
         Text("Notifications", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
     }
     Spacer(modifier = Modifier.height(12.dp))
-    Card(modifier = Modifier.fillMaxWidth().shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp), clip = false)
-        .background(color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(18.dp)
-        )
-        .border(width = 2.dp, color = Color.Transparent, shape = RoundedCornerShape(6.dp)),
-        shape = RectangleShape,
+    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp),
         content = {
             Column(modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surface),

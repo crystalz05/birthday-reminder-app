@@ -44,18 +44,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
-import com.tyro.birthdayreminder.screen.stat_screen_items.PercentageBar
-import com.tyro.birthdayreminder.screen.stat_screen_items.PercentageBarWithText
-import com.tyro.birthdayreminder.screen.stat_screen_items.PercentageBarWithTextForAgeDistribution
-import com.tyro.birthdayreminder.screen.stat_screen_items.UpcomingBirthdayItem
+import com.tyro.birthdayreminder.ui.screen.stat_screen_items.PercentageBar
+import com.tyro.birthdayreminder.ui.screen.stat_screen_items.PercentageBarWithText
+import com.tyro.birthdayreminder.ui.screen.stat_screen_items.PercentageBarWithTextForAgeDistribution
+import com.tyro.birthdayreminder.ui.screen.stat_screen_items.UpcomingBirthdayItem
 import java.time.Month
 import kotlin.random.Random
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen() {
+fun StatsScreen(navHostController: NavHostController) {
 
     var birthdayDistributionexpanded by remember { mutableStateOf(false) }
     var relationshipTypeExpanded by remember { mutableStateOf(false) }
@@ -79,13 +80,15 @@ fun StatsScreen() {
                         }
                     },
                     navigationIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "",
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                        IconButton(onClick = {navHostController.navigateUp()},
+                            modifier = Modifier.padding(start = 10.dp, end = 20.dp)
+                        ){
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     },
                     actions = {
                         Icon(painter = painterResource(id = R.drawable.outline_analytics_24),

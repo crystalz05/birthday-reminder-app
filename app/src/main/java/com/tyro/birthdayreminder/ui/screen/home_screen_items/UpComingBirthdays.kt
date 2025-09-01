@@ -3,6 +3,7 @@ package com.tyro.birthdayreminder.ui.screen.home_screen_items
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,9 +34,11 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.navigation.Screen
 
 @Composable
-fun UpComingBirthdays() {
+fun UpComingBirthdays(navHostController: NavHostController) {
 
     val items = (1..8).toList()
 
@@ -54,20 +57,20 @@ fun UpComingBirthdays() {
 
             items.forEach { _ ->
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 24.dp)) {
+                    modifier = Modifier.clickable { navHostController.navigate(Screen.BirthDayDetail.route) }.padding(vertical = 24.dp)) {
                     Box(modifier = Modifier.background(color = Color.Gray, shape = CircleShape).size(50.dp), Alignment.Center){
                         Icon(Icons.Default.Person, contentDescription = "", Modifier.size(30.dp))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
-                            Text("Emma Wilson", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light, fontSize = 20.sp)
-                            Text("Turning 24", color = MaterialTheme.colorScheme.onBackground, fontSize = 16.sp, fontWeight = FontWeight.Light)
+                            Text("Emma Wilson", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
+                            Text("Turning 24", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
                         }
-                        Column {
+                        Column(horizontalAlignment = Alignment.End) {
                             Text("Dec 8", modifier = Modifier
                                 .border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)), shape = RoundedCornerShape(10.dp))
                                 .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                .padding(horizontal = 12.dp, vertical = 6.dp), color = MaterialTheme.colorScheme.primary,
+                                .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Light
                             )
                             Text("3 days", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)

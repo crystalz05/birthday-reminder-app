@@ -45,13 +45,15 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navHostController: NavHostController) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -94,7 +96,7 @@ fun LoginScreen() {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Forgot Password?", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Right)
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = {}, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16)) {
+                Button(onClick = {navHostController.navigate(Screen.Home.route)}, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16)) {
                     Text("Sign in")
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -118,7 +120,7 @@ fun LoginScreen() {
                     Text("Google")
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                TextButton(onClick = {}){
+                TextButton(onClick = {navHostController.navigate(Screen.Signup.route)}){
                     Text("Don't' have an account? Sign up")
                 }
 
@@ -128,12 +130,12 @@ fun LoginScreen() {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview(){
-    BirthdayReminderTheme {
-        LoginScreen()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun LoginScreenPreview(){
+//    BirthdayReminderTheme {
+//        LoginScreen()
+//    }
+//}
 
 

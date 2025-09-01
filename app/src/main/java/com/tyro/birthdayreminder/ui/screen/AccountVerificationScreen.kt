@@ -19,17 +19,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -52,17 +57,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileAboutSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileAppearanceSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileNotificationSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfilePhotoSection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
-import com.tyro.birthdayreminder.screen.profile_settings_screen_components.ProfileSupportSection
+import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAboutSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAppearanceSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileNotificationSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePhotoSection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
+import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountVerificationScreen() {
+fun AccountVerificationScreen(navHostController: NavHostController) {
 
     var password by remember { mutableStateOf("") }
 
@@ -82,13 +89,15 @@ fun AccountVerificationScreen() {
                         }
                     },
                     navigationIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "",
-                            modifier = Modifier
-                                .padding(start = 10.dp, end = 20.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                        IconButton(onClick = {navHostController.navigateUp()},
+                            modifier = Modifier.padding(start = 10.dp, end = 20.dp)
+                        ){
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
                     },
                     actions = {
                         Icon(imageVector = Icons.Default.Lock,
@@ -167,15 +176,15 @@ fun AccountVerificationScreen() {
                     shape = RoundedCornerShape(0.dp)
                 )
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = {},
+                Button(onClick = {navHostController.navigate(Screen.ProfileEdit.route)},
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(color = Color.Transparent),
                     shape = RoundedCornerShape(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
-                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Delete Account", style = MaterialTheme.typography.titleMedium)
+                        Text("Proceed", style = MaterialTheme.typography.titleMedium)
+                        Icon(imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight, contentDescription = null)
                     }
 
                 }
