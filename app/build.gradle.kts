@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -19,6 +21,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = gradleLocalProperties(rootDir, providers)
+
+//        val webClientId: String = gradleLocalProperties(
+//            rootDir,
+//            providers
+//        )
+//            .getProperty("WEB_CLIENT_ID") ?: ""
+        buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID")}\"")
+    }
+
+    buildFeatures{
+        buildConfig = true // enable BuildConfig generation
     }
 
     buildTypes {
@@ -52,6 +67,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.googleid)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,4 +83,18 @@ dependencies {
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+
+    implementation(libs.play.services.auth)
+
+    implementation(libs.androidx.credentials) // latest stable
+    implementation(libs.androidx.credentials.play.services.auth)
+
+    implementation(libs.google.firebase.analytics)
+    implementation(libs.com.google.firebase.firebase.auth)
+    implementation(libs.google.firebase.firestore)
+
 }

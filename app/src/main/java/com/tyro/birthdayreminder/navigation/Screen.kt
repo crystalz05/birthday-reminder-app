@@ -15,5 +15,5 @@ sealed class Screen(val route: String) {
     object Notification: Screen("notification")
     object Calendar: Screen("calendar")
     object Profile: Screen("profile")
-
+    object EmailVerification: Screen("email_verification")
 }

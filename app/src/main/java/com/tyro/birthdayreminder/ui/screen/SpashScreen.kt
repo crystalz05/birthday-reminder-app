@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.auth.AuthState
+import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import kotlinx.coroutines.delay
@@ -32,17 +33,17 @@ fun SplashScreen(
 
     val authState by authViewModel.authState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        authViewModel.fetchCurrentUser()
+    }
+
     LaunchedEffect(authState) {
         delay(300L)
         when(authState){
-             AuthState.Verified -> {
-                onSplashFinished(Screen.Home.route)
-            }
-            AuthState.Loading -> TODO()
-            AuthState.LoggedOut -> TODO()
-            AuthState.Unverified -> TODO()
+            is AuthState.Unverified, AuthState.LoggedOut -> onSplashFinished(Screen.Login.route)
+            is AuthState.Verified -> onSplashFinished(Screen.Home.route)
+            else -> Unit
         }
-
     }
 
     Box(modifier = Modifier.fillMaxSize()

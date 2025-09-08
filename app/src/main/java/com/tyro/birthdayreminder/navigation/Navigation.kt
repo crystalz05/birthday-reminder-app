@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tyro.birthdayreminder.auth.AuthState
+import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AccountVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AddBirthdayScreen
 import com.tyro.birthdayreminder.ui.screen.BirthdayDetailScreen
@@ -36,20 +37,6 @@ fun Navigation(
     authViewModel: AuthViewModel
 ) {
 
-    val authState by authViewModel.authState.collectAsState()
-
-    LaunchedEffect(authState) {
-        when(authState){
-            AuthState.Verified -> Unit
-            AuthState.Unverified, AuthState.LoggedOut -> {
-                navHostController.navigate(Screen.Login){
-                    popUpTo(navHostController.graph.id) {inclusive = true}
-                    launchSingleTop = true
-                }
-            }
-            AuthState.Loading -> Unit
-        }
-    }
     NavHost(
         navController = navHostController,
         startDestination =Screen.Splash.route,
@@ -88,7 +75,7 @@ fun Navigation(
             AccountVerificationScreen(navHostController)
         }
         composable(Screen.Login.route){
-            LoginScreen(navHostController)
+            LoginScreen(navHostController, authViewModel)
         }
         composable(Screen.Stats.route){
             StatsScreen(navHostController)
@@ -104,6 +91,9 @@ fun Navigation(
         }
         composable(Screen.Profile.route){
             ProfileScreen(navHostController)
+        }
+        composable(Screen.EmailVerification.route){
+            AccountEmailVerificationScreen(navHostController)
         }
     }
 

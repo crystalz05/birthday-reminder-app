@@ -18,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.navigation.Navigation
+import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AccountVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AddBirthdayScreen
 import com.tyro.birthdayreminder.ui.screen.BirthdayDetailScreen
@@ -33,7 +35,9 @@ import com.tyro.birthdayreminder.ui.screen.SignupScreen
 import com.tyro.birthdayreminder.ui.screen.StatsScreen
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 import com.tyro.birthdayreminder.view_model.AuthViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val authViewModel:AuthViewModel by viewModels()
@@ -52,7 +56,10 @@ class MainActivity : ComponentActivity() {
 //                EditBirthdayScreen()
 //                StatsScreen()
 //                ProfileSettingScreen(navHostController = rememberNavController())
-//                AccountVerificationScreen()
+//                AccountVerificationScreen(
+//                    navHostController = rememberNavController()
+//                )
+//                AccountEmailVerificationScreen(navHostController = rememberNavController())
 //                ProfileEditScreen()
                 Navigation(authViewModel = authViewModel)
 //                NotificationScreen(navHostController = rememberNavController())

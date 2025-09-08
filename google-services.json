@@ -12,7 +12,20 @@
           "package_name": "com.tyro.birthdayreminder"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "667390673330-0qub34k2oitdidir971kr617v1in283d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tyro.birthdayreminder",
+            "certificate_hash": "e0152fe6d04e6e893b3c633b1b9734083f9ae1a6"
+          }
+        },
+        {
+          "client_id": "667390673330-5j4tq4g0uum392s8grdi1kb71v8hhdmh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCMRVGozEuYQByINZKDflxU-3Z6yjw5XZA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "667390673330-5j4tq4g0uum392s8grdi1kb71v8hhdmh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -65,18 +65,22 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.OptionsCard
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.TodayBirthday
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.UpComingBirthdays
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
+import com.tyro.birthdayreminder.view_model.AuthViewModel
 import java.time.YearMonth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+) {
 
     var currentTab by remember { mutableStateOf("Home") }
 
