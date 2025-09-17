@@ -34,8 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.tyro.birthdayreminder.R
 
 @Composable
-fun SecondCard(){
-
+fun SecondCard(phoneNumber: String?, email: String?, instagram: String?){
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
         Card(modifier = Modifier.fillMaxWidth(),
@@ -63,21 +62,21 @@ fun SecondCard(){
                         Spacer(Modifier.height(16.dp))
                         Row {
                             MiniCardItem(Modifier.weight(1f), R.drawable.baseline_call_24,
-                                "Call", "08132743494", Color(0xFF2B7C0E)
+                                "Call", phoneNumber ?:"No value", Color(0xFF2B7C0E)
                             )
                             Spacer(Modifier.width(24.dp))
                             MiniCardItem(Modifier.weight(1f), R.drawable.round_chat_24,
-                                "Message", "08132743494", Color(0xFF125296)
+                                "Message", phoneNumber ?:"No value", Color(0xFF125296)
                             )
                         }
                         Spacer(Modifier.height(16.dp))
                         Row {
                             MiniCardItem(Modifier.weight(1f), R.drawable.baseline_email_24,
-                                "Email", "mikebingp@gmail.com", Color(0xFF683EA9)
+                                "Email", email ?:"No value", Color(0xFF683EA9)
                             )
                             Spacer(Modifier.width(24.dp))
                             MiniCardItem(Modifier.weight(1f), R.drawable.instagram_svgrepo_com,
-                                "Instagram", "@mikedetyro", Color(0xFFC408AB))
+                                "Instagram", "No link", Color(0xFFC408AB))
                         }
 
                     }
@@ -95,7 +94,7 @@ fun MiniCardItem(modifier: Modifier, icon: Int, title: String, description: Stri
         modifier.background(color = color.copy(alpha = 0.1f),
             shape = RoundedCornerShape(8.dp)
         ).border(width = 1.dp, color = color.copy(alpha = 0.4f), shape = RoundedCornerShape(8.dp))
-            .padding(16.dp),
+            .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp, alignment = Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

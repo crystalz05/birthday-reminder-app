@@ -2,6 +2,8 @@ package com.tyro.birthdayreminder.view_model
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -43,9 +45,21 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
+    private val _imageUrl = MutableStateFlow<String?>(null)
+    val imageUrl: StateFlow<String?> = _imageUrl
+
+    private val _fullName = MutableStateFlow<String?>(null)
+    val fullName: StateFlow<String?> = _fullName
+
+    private val _email = MutableStateFlow<String?>(null)
+    val email: StateFlow<String?> = _email
+
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    init {
+        fetchCurrentUser()
+    }
     fun registerUser(fullName: String, email: String, password: String){
         _authState.update { AuthState.Loading }
 
@@ -159,6 +173,42 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun updateUserFullName(newName: String){
+        val currentUser = authRepository.currentUser()
+
+        if(currentUser != null){
+            viewModelScope.launch {
+                val result = authRepository.updateUserData(
+                    currentUser.uid,
+                    mapOf("fullName" to newName, "updatedAt" to System.currentTimeMillis())
+                )
+                result.onSuccess {
+                    _uiEvent.send(UiEvent.ShowSnackBar("Name updated successfully"))
+                }.onFailure { e ->
+                    _uiEvent.send(UiEvent.ShowSnackBar("Update failed: ${e.message}"))
+                }
+            }
+        }
+    }
+
+    fun updateProfilePhoto(bitmap: Bitmap){
+        val currentUser = authRepository.currentUser()
+        if(currentUser != null){
+            _authState.update { AuthState.Loading }
+            viewModelScope.launch {
+                val result = authRepository.uploadProfilePhoto(currentUser.uid, bitmap)
+                result.onSuccess { newUrl ->
+                    _imageUrl.update { newUrl }
+                    _uiEvent.send(UiEvent.ShowSnackBar("Profile photo updated"))
+                    _authState.update { AuthState.Idle }
+                }.onFailure { e ->
+                    _uiEvent.send(UiEvent.ShowSnackBar("Update failed: ${e.message}"))
+                    _authState.update { AuthState.Idle }
+                }
+            }
+        }
+    }
+
     fun signOut(){
         _authState.update { AuthState.Loading }
         viewModelScope.launch {
@@ -184,12 +234,25 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    private fun loadProfilePhoto(){
+        val uid = authRepository.currentUser()?.uid ?: return
+        viewModelScope.launch {
+            val snapshot = authRepository.getUserData(uid)
+            _imageUrl.update { snapshot.getString("profilePhotoUrl") }
+            _fullName.update { snapshot.getString("fullName") }
+        }
+    }
+
     fun fetchCurrentUser(){
         val user = authRepository.currentUser()
         _authState.update {
             when {
                 user == null -> AuthState.LoggedOut
-                user.isEmailVerified -> AuthState.Verified(user)
+                user.isEmailVerified -> {
+                    _email.update { user.email }
+                    loadProfilePhoto()
+                    AuthState.Verified(user)
+                }
                 else -> AuthState.Unverified(user)
             }
         }

@@ -10,9 +10,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.tyro.birthdayreminder.auth.AuthState
 import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AccountVerificationScreen
@@ -29,12 +31,18 @@ import com.tyro.birthdayreminder.ui.screen.SignupScreen
 import com.tyro.birthdayreminder.ui.screen.SplashScreen
 import com.tyro.birthdayreminder.ui.screen.StatsScreen
 import com.tyro.birthdayreminder.view_model.AuthViewModel
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
+import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
+import com.tyro.birthdayreminder.view_model.ThemeViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Navigation(
     navHostController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    themeViewModel: ThemeViewModel,
+    birthdayContactViewModel: BirthdayContactViewModel,
+    connectivityViewModel: ConnectivityViewModel
 ) {
 
     NavHost(
@@ -46,7 +54,9 @@ fun Navigation(
         popExitTransition = { fadeOut(animationSpec = tween(100)) },
     ){
         composable(Screen.Splash.route){
-            SplashScreen(authViewModel){ route ->
+            SplashScreen(
+                authViewModel = authViewModel
+            ){ route ->
                 navHostController.navigate(route){
                     popUpTo(navHostController.graph.id) {inclusive = true}
                     launchSingleTop = true
@@ -54,25 +64,25 @@ fun Navigation(
             }
         }
         composable(Screen.Home.route){
-            HomeScreen(navHostController)
+            HomeScreen(navHostController, authViewModel)
         }
         composable(Screen.AddBirthDay.route) {
             AddBirthdayScreen(navHostController)
         }
         composable(Screen.ProfileSetting.route){
-            ProfileSettingScreen(navHostController)
+            ProfileSettingScreen(navHostController, authViewModel, themeViewModel)
         }
-        composable(Screen.BirthDayDetail.route){
-            BirthdayDetailScreen(navHostController)
-        }
-        composable(Screen.ProfileSetting.route){
-            ProfileSettingScreen(navHostController)
+        composable(Screen.BirthDayDetail.route,
+            arguments = listOf(navArgument("contactId"){type = NavType.StringType})
+            ){
+            backStackEntry -> val contactId = backStackEntry.arguments?.getString("contactId")
+                BirthdayDetailScreen(navHostController, contactId)
         }
         composable(Screen.ProfileEdit.route){
             ProfileEditScreen(navHostController)
         }
         composable(Screen.AccountVerification.route){
-            AccountVerificationScreen(navHostController)
+            AccountVerificationScreen(navHostController, authViewModel)
         }
         composable(Screen.Login.route){
             LoginScreen(navHostController, authViewModel)
@@ -83,14 +93,17 @@ fun Navigation(
         composable(Screen.Signup.route){
             SignupScreen(navHostController)
         }
-        composable(Screen.EditBirthDay.route){
-            EditBirthdayScreen(navHostController)
+        composable(Screen.EditBirthDay.route,
+            arguments = listOf(navArgument("contactId"){ type = NavType.StringType })
+        ){
+            backStackEntry -> val contactId = backStackEntry.arguments?.getString("contactId")
+            EditBirthdayScreen(navHostController, contactId)
         }
         composable(Screen.Notification.route) {
             NotificationScreen(navHostController)
         }
         composable(Screen.Profile.route){
-            ProfileScreen(navHostController)
+            ProfileScreen(navHostController, authViewModel)
         }
         composable(Screen.EmailVerification.route){
             AccountEmailVerificationScreen(navHostController)

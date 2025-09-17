@@ -1,23 +1,26 @@
 [versions]
-agp = "8.9.0"
+agp = "8.9.3"
 credentialsPlayServicesAuth = "1.5.0"
 firebaseBom = "34.2.0"
 firebaseFirestore = "26.0.0"
-hiltAndroid = "2.52"
-hiltCompiler = "2.52"
+gotrueKt = "2.4.0"
+hiltAndroid = "2.56.2"
+hiltCompiler = "2.56.2"
 hiltNavigationCompose = "1.2.0"
-kotlin = "2.0.21"
-coreKtx = "1.16.0"
+kotlin = "2.2.10"
+coreKtx = "1.17.0"
 junit = "4.13.2"
-junitVersion = "1.2.1"
-espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.9.1"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+lifecycleRuntimeKtx = "2.9.3"
 activityCompose = "1.10.1"
-composeBom = "2024.09.00"
+composeBom = "2025.08.01"
 navigationCompose = "2.9.3"
-hilt = "2.52" # check latest version
+hilt = "2.56.2" # check latest version
 playServicesAuth = "21.4.0"
 googleid = "1.1.1"
+storageKt = "2.4.0"
+supabaseKt = "2.4.0"
 
 
 [libraries]
@@ -32,9 +35,12 @@ firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-storage = { module = "com.google.firebase:firebase-storage" }
 google-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
 google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+gotrue-kt = { module = "io.github.jan-tennert.supabase-kt:gotrue-kt", version.ref = "gotrueKt" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -52,6 +58,8 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+storage-kt = { module = "io.github.jan-tennert.supabase-kt:storage-kt", version.ref = "storageKt" }
+supabase-kt = { module = "io.github.jan-tennert.supabase-kt:supabase-kt", version.ref = "supabaseKt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

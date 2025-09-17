@@ -1,9 +1,12 @@
 package com.tyro.birthdayreminder.ui.screen.home_screen_items
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +23,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,13 +42,32 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.custom_class.getDayOfYear
+import com.tyro.birthdayreminder.custom_class.getMonthAndDay
+import com.tyro.birthdayreminder.custom_class.getYear
+import com.tyro.birthdayreminder.custom_class.titleCase
 import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
+import kotlinx.datetime.Month
+import java.time.LocalDate
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun UpComingBirthdays(navHostController: NavHostController) {
+fun UpComingBirthdays(
+    navHostController: NavHostController,
+    birthdayContactViewModel: BirthdayContactViewModel
+) {
 
-    val items = (1..8).toList()
+
+    val contacts by birthdayContactViewModel.contacts.collectAsState()
+
+    val upComingContacts = contacts.filter {contact -> getDayOfYear(contact.birthday) > LocalDate.now().dayOfYear  }
+    fun daysLeft(yearDay: String): Int{
+        return getDayOfYear(yearDay) - LocalDate.now().dayOfYear
+    }
+    val currentYear = LocalDate.now().year
 
     Card(modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
@@ -55,25 +82,33 @@ fun UpComingBirthdays(navHostController: NavHostController) {
             }
             Spacer(Modifier.height(24.dp))
 
-            items.forEach { _ ->
+            upComingContacts.forEach { contact ->
+                val (month, day) = getMonthAndDay(contact.birthday)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { navHostController.navigate(Screen.BirthDayDetail.route) }.padding(vertical = 24.dp)) {
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(
+                            color = Color.Black.copy(alpha = 0.2f),
+                            bounded = true
+                        )
+                    ) { navHostController.navigate(Screen.BirthDayDetail.passContactId(contact.id)) }.padding(vertical = 24.dp)) {
                     Box(modifier = Modifier.background(color = Color.Gray, shape = CircleShape).size(50.dp), Alignment.Center){
                         Icon(Icons.Default.Person, contentDescription = "", Modifier.size(30.dp))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
-                            Text("Emma Wilson", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
-                            Text("Turning 24", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
+                            Text(contact.fullName, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
+                            Text("Turning ${currentYear-getYear(contact.birthday)}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Dec 8", modifier = Modifier
+                            Text(
+                                titleCase("${Month(month)} $day"), modifier = Modifier
                                 .border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)), shape = RoundedCornerShape(10.dp))
                                 .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                                 .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Light
                             )
-                            Text("3 days", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
+                            Text("In ${daysLeft(contact.birthday)} days", modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
                         }
                     }
                 }

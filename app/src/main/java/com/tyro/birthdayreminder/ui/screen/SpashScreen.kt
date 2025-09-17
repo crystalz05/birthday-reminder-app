@@ -18,25 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.auth.AuthState
 import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.view_model.AuthViewModel
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
     authViewModel: AuthViewModel,
-    onSplashFinished:(String) -> Unit
-){
+    onSplashFinished:(String) -> Unit,
+    ){
 
     val authState by authViewModel.authState.collectAsState()
-
-    LaunchedEffect(Unit) {
-        authViewModel.fetchCurrentUser()
-    }
-
     LaunchedEffect(authState) {
         delay(300L)
         when(authState){

@@ -7,16 +7,18 @@ plugins {
     id("com.google.gms.google-services")
     id("dagger.hilt.android.plugin")
     kotlin("kapt")
+    kotlin("plugin.serialization") version "2.2.10"
+
 }
 
 android {
     namespace = "com.tyro.birthdayreminder"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.tyro.birthdayreminder"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -35,6 +37,13 @@ android {
     buildFeatures{
         buildConfig = true // enable BuildConfig generation
     }
+
+//    configurations.all {
+//        resolutionStrategy {
+//            force("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.9.0")
+//
+//        }
+//    }
 
     buildTypes {
         release {
@@ -58,6 +67,9 @@ android {
 }
 
 dependencies {
+
+//    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.9.0")
+//    kapt("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.9.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -96,5 +108,25 @@ dependencies {
     implementation(libs.google.firebase.analytics)
     implementation(libs.com.google.firebase.firebase.auth)
     implementation(libs.google.firebase.firestore)
+    implementation (libs.firebase.storage)
+
+    //supa base
+
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.2.3"))
+    implementation("io.github.jan-tennert.supabase:storage-kt-android:3.2.3")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
+    implementation("io.ktor:ktor-client-android:3.2.3")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+    implementation("io.coil-kt.coil3:coil-gif:3.3.0")
+    implementation("io.coil-kt.coil3:coil-svg:3.3.0")
+
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation (libs.firebase.messaging)
+
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
+
 
 }

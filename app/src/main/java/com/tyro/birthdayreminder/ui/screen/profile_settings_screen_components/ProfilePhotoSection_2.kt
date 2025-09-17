@@ -1,5 +1,11 @@
 package com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components
 
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,24 +23,58 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.view_model.AuthViewModel
+
 
 @Composable
-fun ProfilePhotoSection_2(navHostController: NavHostController){
+fun ProfilePhotoSection_2(
+    navHostController: NavHostController,
+    authViewModel: AuthViewModel
+){
+
+    var photoOpened by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val imageUrl by authViewModel.imageUrl.collectAsState()
+    val name by authViewModel.fullName.collectAsState()
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) {
+        uri: Uri? ->
+        photoOpened = false
+        uri?.let {
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+        authViewModel.updateProfilePhoto(bitmap)
+        }
+    }
+
     Card(modifier = Modifier.shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp), clip = false)
         .background(color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(6.dp)
@@ -49,25 +89,38 @@ fun ProfilePhotoSection_2(navHostController: NavHostController){
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.size(110.dp, 110.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), shape = CircleShape), Alignment.Center){
                         Box(Modifier.size(100.dp, 100.dp).background(Color.White, shape = CircleShape), Alignment.Center, content = {})
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(100.dp, 100.dp)
-                                .align(Alignment.Center) // places it at top-right corner of the Box
-                                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape).padding(6.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
+
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Profile Photo",
+                            placeholder = painterResource(id = R.drawable.baseline_person_24),
+                            error = painterResource(id = R.drawable.baseline_person_24),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(100.dp)
+                                .align(Alignment.Center)
+                                .clip(CircleShape)
                         )
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = null,
+
+                        IconButton(
                             modifier = Modifier
-                                .align(Alignment.BottomEnd) // places it at top-right corner of the Box
-                                .background(color = MaterialTheme.colorScheme.primary.copy(0.5f), shape = CircleShape).padding(6.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                                .align(Alignment.BottomEnd),
+                            onClick = {
+                                if(!photoOpened){
+                                    photoOpened = true
+                                    pickImageLauncher.launch("image/*")
+                                }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .background(color = MaterialTheme.colorScheme.primary.copy(0.5f), shape = CircleShape).padding(6.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Paul Michael",
+                    Text(name ?: "unnamed",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Normal)

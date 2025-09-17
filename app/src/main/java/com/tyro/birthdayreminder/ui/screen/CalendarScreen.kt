@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.tyro.birthdayreminder.custom_class.TitleCase
+import com.tyro.birthdayreminder.custom_class.titleCase
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldAction
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldNavigation
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldTitle
@@ -81,7 +81,7 @@ fun CalendarMonth(year: Int, month: Int) {
     }
 
     Column(Modifier.padding(16.dp)) {
-        Text(TitleCase(currentMonth), fontWeight = FontWeight.SemiBold,
+        Text(titleCase(currentMonth), fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.fillMaxWidth().padding(start = 8.dp))
         Text(currentYear, fontWeight = FontWeight.Normal,

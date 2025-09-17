@@ -68,13 +68,6 @@ fun ProfileNotificationSection(){
                 )
                 HorizontalDivider(thickness = 1.dp)
                 SettingSwitchItem(
-                    settingName = "Vibration",
-                    settingDescription = "Vibrate on notification",
-                    active = vibrateNotificationActive,
-                    onChange = {vibrateNotificationActive = it}
-                )
-                HorizontalDivider(thickness = 1.dp)
-                SettingSwitchItem(
                     settingName = "Email Notification",
                     settingDescription = "Receive email reminder",
                     active = emailNotificationActive,

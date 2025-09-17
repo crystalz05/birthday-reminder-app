@@ -1,5 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen.birthday_detail_screen_item
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,12 +35,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.getZodiacSign
+import java.time.LocalDate
+import java.time.Month
+import java.time.format.TextStyle
+import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun FirstCard() {
+fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, dayOfWeek:String?, currentAge:Int?, turningAge:Int?, birthDayDateIntValue: LocalDate?) {
+
+    val zodiacSign = birthDayDateIntValue?.let { getZodiacSign(it) }
 
     val zodiacSigns = mapOf(
         "Aries" to "♈",
@@ -54,6 +67,43 @@ fun FirstCard() {
         "Aquarius" to "♒",
         "Pisces" to "♓"
     )
+    val zodiacTraits = mapOf(
+        "Aries" to "Bold • Energetic",
+        "Taurus" to "Patient • Reliable",
+        "Gemini" to "Curious • Adaptable",
+        "Cancer" to "Caring • Intuitive",
+        "Leo" to "Confident • Generous",
+        "Virgo" to "Practical • Loyal",
+        "Libra" to "Fair • Charming",
+        "Scorpio" to "Passionate • Determined",
+        "Sagittarius" to "Adventurous • Optimistic",
+        "Capricorn" to "Disciplined • Ambitious",
+        "Aquarius" to "Innovative • Independent",
+        "Pisces" to "Compassionate • Artistic"
+    )
+
+    val monthText = birthMonth?.let { Month.of(it).getDisplayName(TextStyle.FULL, Locale.getDefault()) }
+
+    @Composable
+    fun RemainingTime(month: Int, day: Int) {
+        Text(
+            buildAnnotatedString {
+                if (month > 0) {
+                    append("$month ")
+                    pushStyle(SpanStyle(fontWeight = FontWeight.Light, fontSize = 18.sp))
+                    append("month${if (month > 1) "s" else ""}, ")
+                    pop()
+                }
+                append("$day ")
+                pushStyle(SpanStyle(fontWeight = FontWeight.Light, fontSize = 18.sp))
+                append("day${if (day > 1) "s" else ""}")
+                pop()
+            },
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(horizontal = 30.dp),
+            color = MaterialTheme.colorScheme.tertiary
+        )
+    }
 
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
         Card(modifier = Modifier.fillMaxWidth(),
@@ -72,14 +122,12 @@ fun FirstCard() {
                         horizontalAlignment = Alignment.CenterHorizontally
                         ) {
 
-                        Box(modifier = Modifier.background(shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surface).size(60.dp, 60.dp), Alignment.Center){
-                            Text("148", style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary
-                            )
+                        Box(modifier = Modifier.background(shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface).height(60.dp), Alignment.Center){
+                            RemainingTime(monthLeft!!, dayLeft!!)
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("days until next birthday", color = MaterialTheme.colorScheme.onSurface,
+                        Text("until next birthday", color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodyMedium)
 
@@ -107,8 +155,8 @@ fun FirstCard() {
                                     Text("BIRTHDAY", color = Color(0xFFC408AB), style = MaterialTheme.typography.titleMedium)
                                 }
                                 Spacer(Modifier.height(8.dp))
-                                Text("December 7", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-                                Text("Sunday, December, 7", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                                Text("$monthText $birthDay", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                                Text("$dayOfWeek", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                             }
                             Spacer(Modifier.width(24.dp))
 
@@ -126,8 +174,8 @@ fun FirstCard() {
                                     Text("TURNING", color = Color(0xFFC45908), style = MaterialTheme.typography.titleMedium)
                                 }
                                 Spacer(Modifier.height(8.dp))
-                                Text("29 years old", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-                                Text("Currently 28", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                                Text("$turningAge years old", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                                Text("Currently $currentAge", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                             }
                         }
                         Spacer(Modifier.height(24.dp))
@@ -138,13 +186,13 @@ fun FirstCard() {
                                 .padding(16.dp).fillMaxWidth(),
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.background(color = Color(0xFF8030DA).copy(alpha = 0.5f), shape = CircleShape).padding(4.dp)) {
-                                    Text(zodiacSigns["Cancer"]?:"", style = MaterialTheme.typography.headlineMedium)
+                                    Text(zodiacSigns[zodiacSign]?:"", style = MaterialTheme.typography.headlineMedium)
                                 }
-                                Column {
-                                    Text("Sagittarius", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-                                    Text("Adventurous • Optimistic", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(zodiacSign ?: "Unknown", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                                    Text(zodiacTraits[zodiacSign]?: "", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                                 }
                                 Box(Modifier.border(width = 1.dp, shape = RoundedCornerShape(32.dp), color = Color(0xFF8030DA).copy(alpha = 0.2f)).padding(horizontal = 16.dp, vertical = 4.dp)){
                                     Text("Fire Sign", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelMedium)

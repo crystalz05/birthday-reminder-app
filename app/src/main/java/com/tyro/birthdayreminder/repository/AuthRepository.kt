@@ -1,5 +1,6 @@
 package com.tyro.birthdayreminder.repository
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.credentials.CredentialManager
@@ -25,11 +26,18 @@ import androidx.credentials.GetCredentialResponse
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.DocumentSnapshot
 import com.tyro.birthdayreminder.BuildConfig
+import com.tyro.birthdayreminder.custom_class.compressBitmap
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.storage.upload
+import java.io.ByteArrayOutputStream
 
 class AuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
-    private val fireStore: FirebaseFirestore
+    private val fireStore: FirebaseFirestore,
+    private val supabase: SupabaseClient
 ) {
 
     suspend fun registerUser(fullName: String, email: String, password: String): Result<FirebaseUser?>{
@@ -104,58 +112,57 @@ class AuthRepository @Inject constructor(
         }
     }
 
-//    suspend fun signInWithGoogle(activity: ComponentActivity): LoginResult {
-//
-//        return try{
-//            val credentialManager = CredentialManager.create(activity)
-//
-//            val googleIdOption = GetGoogleIdOption.Builder()
-//                .setServerClientId(BuildConfig.WEB_CLIENT_ID)
-//                .build()
-//
-//            val request = GetCredentialRequest.Builder()
-//                .addCredentialOption(googleIdOption)
-//                .build()
-//
-//            val result = credentialManager.getCredential(activity, request)
-//            val googleIdToken = when (val credential = result.credential){
-//                is CustomCredential -> {
-//                    if(credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL){
-//                        GoogleIdTokenCredential.createFrom(credential.data).idToken
-//                    }else null
-//                }
-//                else -> null
-//            }
-//
-//            if(googleIdToken.isNullOrEmpty()){
-//                return LoginResult.Error("Google Sign-In failed: missing token")
-//            }
-//
-//            val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
-//            val authResult = auth.signInWithCredential(firebaseCredential).await()
-//            val user = authResult.user
-//
-//            if (user != null) {
-//                if (user.isEmailVerified) {
-//                    LoginResult.Verified(user)
-//                } else {
-//                    LoginResult.Unverified(user)
-//                }
-//            } else {
-//                LoginResult.Error("Google Sign-In failed: user is null")
-//            }
-//        } catch (e: Exception) {
-//            LoginResult.Error(mapAuthError(e))
-//        }
-//
-//
-//    }
+    suspend fun updateUserData(uid: String, updates: Map<String, Any>): Result<Unit>{
+        return try{
+            fireStore.collection("users")
+                .document(uid)
+                .update(updates)
+                .await()
+            Result.success(Unit)
+        }catch (e: Exception){
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadProfilePhoto(uid: String, bitmap: Bitmap): Result<String>{
+        return try{
+            val bucket = supabase.storage.from("profile-photos")
+            val path = "profile-photos/$uid/profile.jpg"
+
+            val bytes: ByteArray = compressBitmap(bitmap)
+
+            bucket.upload(path, bytes){
+                upsert = true
+            }
+            val baseUrl = bucket.publicUrl(path)
+
+            val freshUrl = "$baseUrl?t=${System.currentTimeMillis()}" // 👈 bust cache
+            fireStore.collection("users")
+                .document(uid)
+                .update(
+                    mapOf(
+                        "profilePhotoUrl" to freshUrl,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+                )
+                .await()
+            Result.success(freshUrl)
+        }catch (e: Exception){
+            Result.failure(e)
+        }
+    }
 
     fun signOut(){
         auth.signOut()
     }
 
     fun currentUser(): FirebaseUser? = auth.currentUser
+
+    suspend fun getUserData(uid: String): DocumentSnapshot{
+        return fireStore.collection("users")
+            .document(uid)
+            .get().await()
+    }
 }
 
 private fun mapAuthError(e: Exception): String{

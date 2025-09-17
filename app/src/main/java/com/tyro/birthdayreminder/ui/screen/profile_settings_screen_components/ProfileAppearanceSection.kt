@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,13 +32,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.ThemeMode
+import com.tyro.birthdayreminder.view_model.ThemeViewModel
 
 @Composable
-fun ProfileAppearanceSection(){
+fun ProfileAppearanceSection(
+    themeViewModel: ThemeViewModel
+){
+    val theme by themeViewModel.themeMode.collectAsState()
 
-    var darkModeActive by remember { mutableStateOf(false) }
-    var autoThemeActive by remember { mutableStateOf(false) }
-
+    var darkModeActive = theme == ThemeMode.DARK
+    var autoThemeActive = theme == ThemeMode.SYSTEM
 
     Spacer(modifier = Modifier.height(12.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -56,14 +61,20 @@ fun ProfileAppearanceSection(){
                     settingName = "Dark Mode",
                     settingDescription = "Use dark theme",
                     active = darkModeActive,
-                    onChange = {darkModeActive = it}
+                    onChange = {
+                        if(it) themeViewModel.setThemeMode(ThemeMode.DARK)
+                        else themeViewModel.setThemeMode(ThemeMode.LIGHT)
+                    }
                 )
                 HorizontalDivider(thickness = 1.dp)
                 SettingSwitchItem(
                     settingName = "Auto Theme",
                     settingDescription = "Follow system theme",
                     active = autoThemeActive,
-                    onChange = {autoThemeActive = it}
+                    onChange = {
+                        if (it) themeViewModel.setThemeMode(ThemeMode.SYSTEM)
+                        else themeViewModel.setThemeMode(ThemeMode.LIGHT)
+                    }
                 )
             }
         }

@@ -1,6 +1,8 @@
 package com.tyro.birthdayreminder.ui.screen.home_screen_items
 
 import android.content.ClipData.Item
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -44,18 +48,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.getDayOfYMonth
+import com.tyro.birthdayreminder.custom_class.getMonth
+import com.tyro.birthdayreminder.custom_class.getYear
 import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
+import java.time.LocalDate
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TodayBirthday(navHostController: NavHostController){
+fun TodayBirthday(
+    navHostController: NavHostController,
+    birthdayContactViewModel: BirthdayContactViewModel
+){
+
+    val contacts by birthdayContactViewModel.contacts.collectAsState()
+    val todayBirthDay = contacts.filter { contact -> getMonth(contact.birthday) == LocalDate.now().monthValue
+            && getDayOfYMonth(contact.birthday) == LocalDate.now().dayOfMonth }
 
     val items = (1..3).toList()
 //    val items = emptyList<String>()
-4
+
     LazyColumn(Modifier.heightIn(min = 100.dp, max = 400.dp).fillMaxWidth()
         .background(
             brush = Brush.horizontalGradient(
@@ -113,7 +131,7 @@ fun TodayBirthday(navHostController: NavHostController){
             }
         }
 
-        if(items.isEmpty()){
+        if(todayBirthDay.isEmpty()){
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
                     Icon(Icons.Outlined.Info, contentDescription = "", tint = Color(0xFFFF9800))
@@ -123,45 +141,47 @@ fun TodayBirthday(navHostController: NavHostController){
                 }
             }
         }
-        items(items.size) {
-            Card(modifier = Modifier.fillMaxWidth().clickable {navHostController.navigate(Screen.BirthDayDetail.route)  }
-                .padding(top = if (it == 0) 5.dp else 0.dp), // ✅ Push first item down ,
-                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.2f),
-                    contentColor = Color.White), shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)){
-                        Box(modifier = Modifier
-                            .size(60.dp)
-                            .background(color = Color.White.copy(alpha = 0.2f), shape = CircleShape)){
-                            Icon(modifier = Modifier.fillMaxSize(), tint = Color.White,
-                                imageVector = Icons.Filled.AccountCircle, contentDescription = "")
-                        }
-                        Column {
-                            Text("Sarah Johnson", fontSize = 20.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold)
-                            Text("Turning 29 • Friend",
-                                color = Color.White,
-                                fontSize = 16.sp, fontWeight = FontWeight.Light)
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Button(modifier = Modifier.weight(1f), onClick = {}, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(painterResource(id = R.drawable.round_chat_24), contentDescription = "", tint = Color.White)
-                                Text("Message",color = Color.White,)
+        item {
+            todayBirthDay.forEach{contact ->
+                Card(modifier = Modifier.fillMaxWidth().clickable {navHostController.navigate(Screen.BirthDayDetail.route)  }
+                    .padding(top = 5.dp), // ✅ Push first item down ,
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.2f),
+                        contentColor = Color.White), shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)){
+                            Box(modifier = Modifier
+                                .size(60.dp)
+                                .background(color = Color.White.copy(alpha = 0.2f), shape = CircleShape)){
+                                Icon(modifier = Modifier.fillMaxSize(), tint = Color.White,
+                                    imageVector = Icons.Filled.AccountCircle, contentDescription = "")
+                            }
+                            Column {
+                                Text(contact.fullName, fontSize = 20.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold)
+                                Text("Turning ${LocalDate.now().year - getYear(contact.birthday)} • ${contact.relationship}",
+                                    color = Color.White,
+                                    fontSize = 16.sp, fontWeight = FontWeight.Light)
                             }
                         }
-                        Spacer(Modifier.width(16.dp))
-                        Button(modifier = Modifier.weight(1f), onClick = {}, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Outlined.Phone, contentDescription = "", tint = Color.White)
-                                Text("Call",color = Color.White,)
+                        Spacer(Modifier.height(8.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Button(modifier = Modifier.weight(1f), onClick = {}, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(painterResource(id = R.drawable.round_chat_24), contentDescription = "", tint = Color.White)
+                                    Text("Message",color = Color.White,)
+                                }
                             }
-                        }
+                            Spacer(Modifier.width(16.dp))
+                            Button(modifier = Modifier.weight(1f), onClick = {}, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Outlined.Phone, contentDescription = "", tint = Color.White)
+                                    Text("Call",color = Color.White,)
+                                }
+                            }
 
+                        }
                     }
                 }
             }

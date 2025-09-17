@@ -1,5 +1,9 @@
 package com.tyro.birthdayreminder.screen.add_birthday_components
 
+import android.net.Uri
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +40,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
@@ -43,6 +49,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,34 +59,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.custom_class.DatePickerModal
+import com.tyro.birthdayreminder.entity.Contact
+import com.tyro.birthdayreminder.entity.objects.ContactPhoto
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.text.SimpleDateFormat
 import java.util.Date
+import coil3.compose.AsyncImage
 import java.util.Locale
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import android.util.Log
+
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBirthdayFirstPage(
-    selectedDate: String,
-    onSelectedDateChange: (String) -> Unit,
-    fullName: String,
-    onFullNameChange: (String) -> Unit
+    contactFormViewModel: ContactFormViewModel = viewModel()
     ){
 
-    var personalNote by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
+    val formState by contactFormViewModel.formState.collectAsState()
+    Log.d("view model", formState.photo.toString())
     var showDatePicker by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("Family", "Parent", "Sibling", "Child", "Spouse", "Partner", "Friend", "Best Friend", "Close Friend", "Colleague", "Boss", "Neighbour", "Classmate")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+
+    var photoOpened by remember { mutableStateOf(false) }
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) {
+            uri: Uri? ->
+        photoOpened = false
+        uri?.let {
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+            contactFormViewModel.onImagePicked(bitmap)
+        }
+    }
 
     Column(modifier = Modifier
         .padding(16.dp).fillMaxSize(),
@@ -91,7 +122,7 @@ fun EditBirthdayFirstPage(
                 onDateSelected = { millis ->
                     millis?.let {
                         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                        onSelectedDateChange(formatter.format(Date(it)))
+                        contactFormViewModel.onBirthDateChange(formatter.format(Date(it)))
                     }
                     showDatePicker = false
                 },
@@ -113,26 +144,65 @@ fun EditBirthdayFirstPage(
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(Modifier.size(110.dp, 110.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), shape = CircleShape), Alignment.Center){
                                     Box(Modifier.size(100.dp, 100.dp).background(Color.White, shape = CircleShape), Alignment.Center, content = {})
-                                    Icon(
-                                        imageVector = Icons.Filled.Person,
-                                        contentDescription = "",
-                                        modifier = Modifier.size(100.dp, 100.dp)
-                                            .align(Alignment.Center) // places it at top-right corner of the Box
-                                            .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape).padding(6.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.baseline_camera_24),
-                                        contentDescription = "",
+                                    if (formState.photo != null) {
+                                        when (val photo = formState.photo) {
+                                            is ContactPhoto.Local -> {
+                                                // Local bitmap from phone storage
+                                                Image(
+                                                    bitmap = photo.bitmap.asImageBitmap(),
+                                                    contentDescription = "Profile picture",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(100.dp)
+                                                        .align(Alignment.Center)
+                                                        .clip(CircleShape)
+                                                )
+                                            }
+                                            is ContactPhoto.Remote -> {
+                                                // Remote URL, load with AsyncImage (Coil)
+                                                AsyncImage(
+                                                    model = photo.url,
+                                                    contentDescription = "Profile picture",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(100.dp)
+                                                        .align(Alignment.Center)
+                                                        .clip(CircleShape)
+                                                )
+                                            }
+                                            else -> Unit
+                                        }
+                                    }else{
+                                        Icon(
+                                            imageVector = Icons.Filled.Person,
+                                            contentDescription = "",
+                                            modifier = Modifier.size(100.dp, 100.dp)
+                                                .align(Alignment.Center) // places it at top-right corner of the Box
+                                                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape).padding(6.dp),
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                    IconButton(onClick = {
+                                        pickImageLauncher.launch("image/*")
+                                    },
                                         modifier = Modifier
-                                            .align(Alignment.BottomEnd) // places it at top-right corner of the Box
-                                            .background(color = MaterialTheme.colorScheme.primary.copy(0.5f), shape = CircleShape).padding(6.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimary
-                                    )
+                                            .align(Alignment.BottomEnd)
+                                            .background(
+                                                color = MaterialTheme.colorScheme.primary.copy(0.5f),
+                                                shape = CircleShape
+                                            )
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.fillMaxSize(),
+                                            painter = painterResource(id = R.drawable.baseline_camera_24),
+                                            contentDescription = "",
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
 
                                 }
                                 Spacer(Modifier.height(8.dp))
-                                Text("Tap to change photo",
+                                Text("Tap to select photo",
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Normal)
@@ -159,7 +229,7 @@ fun EditBirthdayFirstPage(
                             TextField(modifier = Modifier
                                 .fillMaxWidth(),
                                 leadingIcon = { Icon(painter = painterResource(id = R.drawable.outline_person_heart_24), tint = MaterialTheme.colorScheme.primary, contentDescription = "Relationship") },
-                                value = fullName, onValueChange = {onFullNameChange(it)},
+                                value = formState.fullName, onValueChange = {contactFormViewModel.fullNameChange(it)},
                                 label = { Text("Full Name", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                 singleLine = true,
                                 colors = TextFieldDefaults.colors(
@@ -180,7 +250,7 @@ fun EditBirthdayFirstPage(
                                     .fillMaxWidth(),
                                     leadingIcon = { Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Birth Date",
                                         tint = MaterialTheme.colorScheme.primary) },
-                                    value = selectedDate,
+                                    value = formState.birthday,
                                     onValueChange = {},
                                     placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                     enabled = false,
@@ -203,7 +273,7 @@ fun EditBirthdayFirstPage(
                                 TextField(modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryEditable, enabled = true)
                                     .fillMaxWidth(),
                                     leadingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                    value = selectedOption, onValueChange = {},
+                                    value = formState.relationship, onValueChange = {},
                                     label = { Text("Relationship", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                     readOnly = true,
                                     singleLine = true,
@@ -224,7 +294,7 @@ fun EditBirthdayFirstPage(
                                     options.forEach{
                                             option -> DropdownMenuItem(text = { Text(option) },
                                         onClick = {
-                                            selectedOption = option
+                                            contactFormViewModel.onRelationshipChange(option)
                                             expanded = false
 
                                         })
@@ -263,7 +333,7 @@ fun EditBirthdayFirstPage(
                             Spacer(modifier = Modifier.height(16.dp))
                             TextField(modifier = Modifier.height(200.dp)
                                 .fillMaxWidth(),
-                                value = personalNote, onValueChange = {personalNote = it},
+                                value = formState.personalNote, onValueChange = {contactFormViewModel.onPersonalNoteChange(it)},
                                 placeholder = { Text("Add any special notes, preferences, or memories", style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                 maxLines = 10,

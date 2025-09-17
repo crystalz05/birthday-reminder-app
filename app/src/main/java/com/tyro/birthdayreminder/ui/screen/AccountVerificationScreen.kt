@@ -1,5 +1,6 @@
 package com.tyro.birthdayreminder.ui.screen
 
+import android.util.Log
 import com.tyro.birthdayreminder.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,20 +45,25 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAboutSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAppearanceSection
@@ -65,13 +71,22 @@ import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.Pr
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePhotoSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
+import com.tyro.birthdayreminder.view_model.AuthViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountVerificationScreen(navHostController: NavHostController) {
+fun AccountVerificationScreen(
+    navHostController: NavHostController,
+    authViewModel: AuthViewModel
+) {
+    val imageUrl by authViewModel.imageUrl.collectAsState()
 
     var password by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        Log.d("ViewModel", "printing out : ${imageUrl}")
+    }
 
     Scaffold(
         topBar = {
@@ -132,13 +147,15 @@ fun AccountVerificationScreen(navHostController: NavHostController) {
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(Modifier.size(110.dp, 110.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), shape = CircleShape), Alignment.Center){
                                     Box(Modifier.size(100.dp, 100.dp).background(Color.White, shape = CircleShape), Alignment.Center, content = {})
-                                    Icon(
-                                        imageVector = Icons.Filled.Person,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(100.dp, 100.dp)
-                                            .align(Alignment.Center) // places it at top-right corner of the Box
-                                            .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape).padding(6.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    AsyncImage(
+                                        model = imageUrl,
+                                        contentDescription = "Profile Photo",
+                                        placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                        error = painterResource(id = R.drawable.baseline_person_24),
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.size(100.dp)
+                                            .align(Alignment.Center)
+                                            .clip(CircleShape)
                                     )
                                 }
                                 Spacer(Modifier.height(8.dp))

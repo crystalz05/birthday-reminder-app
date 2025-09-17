@@ -1,5 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen.home_screen_items
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +27,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,13 +36,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.getMonth
 import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
+import java.time.LocalDate
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun OptionsCard(navHostController: NavHostController, onclick:()->Unit){
+fun OptionsCard(
+    navHostController: NavHostController,
+    onclick:()->Unit,
+    birthdayContactViewModel: BirthdayContactViewModel
+    ){
+
+    val contacts by birthdayContactViewModel.contacts.collectAsState()
+
+    val thisMonthBirthdays = contacts.filter { contact -> getMonth(contact.birthday) == LocalDate.now().monthValue }
 
     Card(modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
@@ -104,7 +121,7 @@ fun OptionsCard(navHostController: NavHostController, onclick:()->Unit){
                     Text("Total Contacts",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Normal)
-                    Text("127", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                    Text("${contacts.size}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                 }
                 IconButton(onClick = {}, modifier = Modifier.background(shape = CircleShape,
                     color = Color(0xFFF44336)
@@ -128,7 +145,7 @@ fun OptionsCard(navHostController: NavHostController, onclick:()->Unit){
                     Text("This Month",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Normal)
-                    Text("8", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                    Text("${thisMonthBirthdays.size}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                 }
                 IconButton(onClick = {}, modifier = Modifier.background(shape = CircleShape,
                     color = Color(0xFFF44336)

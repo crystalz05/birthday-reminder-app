@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -44,16 +45,18 @@ import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.Pr
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePhotoSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
+import com.tyro.birthdayreminder.view_model.AuthViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navHostController: NavHostController) {
-
-
-    LazyColumn(modifier = Modifier.padding(16.dp)) {
+fun ProfileScreen(
+    navHostController: NavHostController,
+    authViewModel: AuthViewModel
+) {
+    LazyColumn(modifier = Modifier.padding(16.dp).fillMaxSize()) {
         item {
-            ProfilePhotoSection(navHostController)
+            ProfilePhotoSection(navHostController, authViewModel)
             Spacer(Modifier.height(16.dp))
             Spacer(Modifier.height(16.dp))
             Button(onClick = {},

@@ -5,8 +5,12 @@ sealed class Screen(val route: String) {
     object Signup: Screen("signup")
     object AccountVerification: Screen("account_verification")
     object AddBirthDay: Screen("add_birthday")
-    object BirthDayDetail: Screen("birthday_details")
-    object EditBirthDay: Screen("edit_birthday")
+    object BirthDayDetail: Screen("birthday_details/{contactId}"){
+        fun passContactId(contactId: String?) = "birthday_details/$contactId"
+    }
+    object EditBirthDay: Screen("edit_birthday/{contactId}"){
+        fun passContactId(contactId: String?) = "edit_birthday/$contactId"
+    }
     object Home: Screen("home")
     object ProfileEdit: Screen("profile_edit")
     object ProfileSetting: Screen("profile_setting")

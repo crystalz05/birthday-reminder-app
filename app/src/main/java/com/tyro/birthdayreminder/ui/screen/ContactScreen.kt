@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -68,7 +69,7 @@ fun ContactScreen() {
         .sortedBy { it.first }
         .groupBy { it.first.first().uppercaseChar() }
 
-    Column(modifier = Modifier) {
+    Column(modifier = Modifier.fillMaxSize()) {
         if (ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.READ_CONTACTS
@@ -161,9 +162,11 @@ fun ContactPermissionRequester(
             onPermissionDenied()
         }
     }
-    Button(onClick = {
-        launcher.launch(Manifest.permission.READ_CONTACTS)
-    }) {
-        Text("Request Contacts Permission")
+    Box(modifier = Modifier.fillMaxSize() ) {
+        Button(modifier = Modifier.align(Alignment.Center), onClick = {
+            launcher.launch(Manifest.permission.READ_CONTACTS)
+        }) {
+            Text("Request Contacts Permission")
+        }
     }
 }

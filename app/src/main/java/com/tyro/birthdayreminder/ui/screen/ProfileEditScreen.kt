@@ -152,34 +152,6 @@ fun ProfileEditScreen(navHostController: NavHostController) {
                                     leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = "") },
                                 )
 
-                                Row(verticalAlignment = Alignment.CenterVertically){
-                                    Checkbox(checked = changePasswordCheck, onCheckedChange = { changePasswordCheck = it })
-                                    Text("Check here if you wish to change your password" , color = MaterialTheme.colorScheme.onBackground)
-                                }
-
-                                OutlinedTextField(modifier = Modifier.fillMaxWidth(),
-                                    value = password,
-                                    enabled = changePasswordCheck,
-                                    onValueChange = {password = it},
-                                    visualTransformation = if(showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                                    placeholder = { Text("Enter your password")},
-                                    leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = "") },
-                                    trailingIcon = {
-                                        IconButton(onClick = {showPassword = !showPassword}) {
-                                            Icon(painter = painterResource(id = if(showPassword) R.drawable.baseline_visibility_off_24 else R.drawable.baseline_visibility_24),
-                                                contentDescription = "")
-                                        }
-                                    },
-                                    supportingText = {Text("Password must be at least 6 characters long")}
-                                )
-                                OutlinedTextField(modifier = Modifier.fillMaxWidth(),
-                                    enabled = changePasswordCheck,
-                                    value = confirmPassword,
-                                    onValueChange = {confirmPassword = it},
-                                    visualTransformation = if(showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                                    placeholder = { Text("Confirm you password")},
-                                    leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = "") },
-                                )
                                 Button(onClick = {}, modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16))
                                 {
