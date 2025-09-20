@@ -21,24 +21,40 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +63,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
+import com.tyro.birthdayreminder.auth.ContactOperationState
+import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.getAge
 import com.tyro.birthdayreminder.custom_class.getAgeOnNextBirthday
@@ -63,6 +82,7 @@ import com.tyro.birthdayreminder.ui.screen.birthday_detail_screen_item.ThirdCard
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +93,7 @@ fun BirthdayDetailScreen(
     birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel(),
 ) {
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(contactId) {
         if (contactId != null) {
             birthdayContactViewModel.loadSingleContact(contactId)
         }
@@ -88,12 +108,37 @@ fun BirthdayDetailScreen(
     val dayOfWeek = contact?.birthday?.let { getDayOfWeek(it) }
     val (monthLeft, daysLeft) = contact?.birthday?.let { getDaysLeft(it) } ?: (null to null)
     val birthDayDateIntValue = contact?.birthday?.let { getDate(it) }
+    val photoUrl = contact?.photo
 
     val phoneNumber = contact?.phoneNumber
     val email = contact?.email
     val instagram = contact?.instagram
 
+    var showDialog by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    val contactState by birthdayContactViewModel.contactOperationState.collectAsState()
+
+
+    LaunchedEffect(Unit) {
+        birthdayContactViewModel.uiEvent.collect{event ->
+            when(event){
+                is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                is UiEvent.Navigate -> navHostController.navigate(event.route){
+                    popUpTo(Screen.BirthDayDetail.passContactId(contactId)) { inclusive = true }
+                    launchSingleTop = true
+                }
+                else -> Unit
+            }
+        }
+    }
+
+
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -123,99 +168,149 @@ fun BirthdayDetailScreen(
         }
 
     ) {innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            item {
-                if (contact == null) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Loading()
-                    }
-                }else{
-                    Box(){
-                        Column(modifier = Modifier
-                            .padding(bottom = 20.dp)
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier
-                                .size(110.dp, 110.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                                    shape = CircleShape
-                                ), Alignment.Center){
-                                Box(Modifier
-                                    .size(100.dp, 100.dp)
-                                    .background(Color.White, shape = CircleShape), Alignment.Center, content = {})
-                                Icon(
-                                    imageVector = Icons.Filled.Person,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(100.dp, 100.dp)
-                                        .align(Alignment.Center) // places it at top-right corner of the Box
-                                        .background(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            shape = CircleShape
-                                        )
-                                        .padding(6.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
+        when(contactState){
+            is ContactOperationState.Loading -> {
+                Loading()
+            }
+            is ContactOperationState.Error ->{
+                val errorMessage = (contactState as ContactOperationState.Error).message
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(errorMessage, color = MaterialTheme.colorScheme.error)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = {
+                            if (contactId != null) {
+                                birthdayContactViewModel.loadSingleContact(contactId)
                             }
-                            Spacer(Modifier.height(8.dp))
-                            Text(name ?: "",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(8.dp))
-                            Row {
-                                Text(relationship ?: "Unknown", style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold, color= MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier
-                                        .background(
-                                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 4.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Turning $turningAge", style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold, color= MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier
-                                        .background(
-                                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 4.dp))
-                            }
-                            Spacer(Modifier.height(20.dp))
+                        }) {
+                            Text("Retry")
                         }
-                        Column(Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(end = 16.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                shape = CircleShape
-                            )
-                        ) {
-                            IconButton(onClick = {navHostController.navigate(Screen.EditBirthDay.passContactId(contactId))}) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit, contentDescription = null,
-                                    tint = colorResource(id = R.color.orange)
-                                )
-                            }
-                        }
-                    }
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        FirstCard(monthLeft, daysLeft, month, day, dayOfWeek, currentAge, turningAge, birthDayDateIntValue)
-                        SecondCard(phoneNumber, email, instagram)
-                        ThirdCard()
                     }
                 }
             }
+            is ContactOperationState.Success <*> ->{
+                if(contact != null){
+                    LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                        item {
+                            Box(modifier = Modifier.fillMaxSize()){
+                                if (showDialog) {
+                                    AlertDialog(
+                                        onDismissRequest = { showDialog = false },
+                                        confirmButton = {
+                                            TextButton(onClick = {
+                                                if (contactId != null) {
+                                                    birthdayContactViewModel.deleteContact(contactId)
+                                                }
+                                                showDialog = false
+                                            }) {
+                                                Text("Delete", color = MaterialTheme.colorScheme.error)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = {
+                                                showDialog = false
+                                            }) {
+                                                Text("Cancel")
+                                            }
+                                        },
+                                        title = { Text("Confirm Delete") },
+                                        text = { Text("Are you sure you want to delete this contact?") }
+                                    )
+                                }
+                                Column(modifier = Modifier
+                                    .padding(bottom = 20.dp)
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Box(Modifier
+                                        .size(110.dp, 110.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                                            shape = CircleShape
+                                        ), Alignment.Center){
+                                        Box(Modifier.size(110.dp, 110.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), shape = CircleShape), Alignment.Center){
+                                            Box(Modifier.size(100.dp, 100.dp).background(Color.White, shape = CircleShape), Alignment.Center, content = {})
+                                            AsyncImage(
+                                                modifier = Modifier.size(100.dp).alpha(1f)
+                                                    .align(Alignment.Center)
+                                                    .clip(CircleShape),
+                                                model = photoUrl,
+                                                contentDescription = "Profile Photo",
+                                                placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                                error = painterResource(id = R.drawable.baseline_person_24),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(name ?: "",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold)
+                                    Spacer(Modifier.height(8.dp))
+                                    Row {
+                                        Text(relationship ?: "Unknown", style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold, color= MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
+                                                    shape = RoundedCornerShape(16.dp)
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 4.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Turning $turningAge", style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold, color= MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
+                                                    shape = RoundedCornerShape(16.dp)
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 4.dp))
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                                Column(Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(end = 16.dp)
+                                ) {
+                                    IconButton(
+                                        colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                                        onClick = {navHostController.navigate(Screen.EditBirthDay.passContactId(contactId))}) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit, contentDescription = null,
+                                            tint = colorResource(id = R.color.orange)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    IconButton(
+                                        colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                                        onClick = {
+                                            showDialog = true
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete, contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                FirstCard(monthLeft, daysLeft, month, day, dayOfWeek, currentAge, turningAge, birthDayDateIntValue)
+                                SecondCard(phoneNumber, email, instagram)
+                                ThirdCard()
+                            }
+                        }
+                    }
+                }
+            }
+            else -> Unit
         }
     }
-
 
 }
 

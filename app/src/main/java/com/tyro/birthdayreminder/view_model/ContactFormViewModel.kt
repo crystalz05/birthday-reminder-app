@@ -61,8 +61,8 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
         _formState.update { it.copy(photo = ContactPhoto.Local(bitmap)) }
     }
 
-    fun setPhotoUrl(url: String) {
-        _formState.update { it.copy(photo = ContactPhoto.Remote(url)) }
+    fun setPhotoUrl(photo: Bitmap) {
+        _formState.update { it.copy(photo = ContactPhoto.Local(photo)) }
     }
 
     fun on2WeeksToggled(){

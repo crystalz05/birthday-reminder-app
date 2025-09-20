@@ -4,6 +4,7 @@ import com.tyro.birthdayreminder.R
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -49,6 +50,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -73,7 +76,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.auth.ContactOperationState
+import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.custom_class.Loading
+import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.screen.add_birthday_components.EditBirthdayFirstPage
 import com.tyro.birthdayreminder.screen.add_birthday_components.EditBirthdaySecondPage
 import com.tyro.birthdayreminder.screen.add_birthday_components.EditBirthdayThirdPage
@@ -82,6 +88,7 @@ import com.tyro.birthdayreminder.ui.screen.add_birthday_components.AddBirthdayTh
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ContactFormViewModel
+import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,14 +100,14 @@ fun EditBirthdayScreen(
     contactFormViewModel: ContactFormViewModel = hiltViewModel()
     ) {
 
-    var fullName by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var emailAddress by remember { mutableStateOf("") }
-    var instagram by remember { mutableStateOf("") }
-    var twitter by remember { mutableStateOf("") }
+    val snackBarHostState = remember { SnackbarHostState() }
 
-    val canProceed by remember { derivedStateOf { fullName.isNotBlank() && selectedDate.isNotBlank()} }
+    val formState by contactFormViewModel.formState.collectAsState()
+
+    val canProceed by remember { derivedStateOf {
+        formState.fullName.isNotBlank()
+                && formState.birthday.isNotBlank()
+                && formState.phoneNumber.isNotBlank()} }
     var currentTab by remember { mutableStateOf("Personal") }
 
     val tabs = listOf(
@@ -112,10 +119,11 @@ fun EditBirthdayScreen(
 
     LaunchedEffect(Unit) {
         if (contactId != null) {
-            val result = birthdayContactViewModel.loadSingleContact(contactId)
+            birthdayContactViewModel.loadSingleContact(contactId)
         }
     }
 
+    val contactOperationState by birthdayContactViewModel.contactOperationState.collectAsState()
     val contact by birthdayContactViewModel.contactDetail.collectAsState()
 
     LaunchedEffect(contact) {
@@ -124,8 +132,32 @@ fun EditBirthdayScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        launch {
+            contactFormViewModel.uiEvent.collect{event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    else -> Unit
+                }
+            }
+        }
+
+        launch {
+            birthdayContactViewModel.uiEvent.collect{event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    is UiEvent.Navigate -> navHostController.navigate(event.route){
+                        popUpTo(Screen.BirthDayDetail.passContactId(contactId)) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -167,7 +199,16 @@ fun EditBirthdayScreen(
                         Spacer(Modifier.width(16.dp))
                         Text("Cancel")
                     }
-                    Button(onClick = {},  shape = RoundedCornerShape(8.dp),
+                    Button(onClick = {
+                            if(contactFormViewModel.validateForm()){
+                                if (contactId != null) {
+                                    birthdayContactViewModel.updateContact(contactId, formState)
+                                    Log.e("updateContact", "$contactId",)
+
+                                }
+                            }
+
+                    },  shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f),
                         enabled = canProceed,
                         colors = ButtonDefaults.buttonColors(
@@ -220,65 +261,60 @@ fun EditBirthdayScreen(
             }
         }else{
             Column(modifier = Modifier.padding(innerPadding)) {
-                Card(modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
-                        contentColor = Color.White), shape = RoundedCornerShape(8.dp),
-                    content = {
-                        Box(modifier = Modifier.fillMaxWidth()
-                            .padding(16.dp), contentAlignment = Alignment.CenterStart
-                        ) {
-                            TabRow(selectedTabIndex = selectedIndex) {
-                                tabs.forEachIndexed { index, (tabName, icon) ->
-                                    Tab(
-                                        selected = selectedIndex == index,
-                                        onClick = { currentTab = tabName },
-                                        text = { Text(tabName) },
-                                        icon = { Icon(icon, contentDescription = null) } // make dynamic
-                                    )
+                Box(modifier = Modifier.fillMaxSize()){
+                    Card(modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = Color.White), shape = RoundedCornerShape(8.dp),
+                        content = {
+                            Box(modifier = Modifier.fillMaxWidth()
+                                .padding(16.dp), contentAlignment = Alignment.CenterStart
+                            ) {
+                                TabRow(selectedTabIndex = selectedIndex) {
+                                    tabs.forEachIndexed { index, (tabName, icon) ->
+                                        Tab(
+                                            selected = selectedIndex == index,
+                                            onClick = { currentTab = tabName },
+                                            text = { Text(tabName) },
+                                            icon = { Icon(icon, contentDescription = null) } // make dynamic
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                )
-                Card(modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = Color.White), shape = RoundedCornerShape(0.dp),
-                    content = {
-                        Box(modifier = Modifier.fillMaxWidth()
-                            .background(color = colorResource(id = R.color.orange))
-                            .padding(16.dp), contentAlignment = Alignment.CenterStart
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
-                                Text("Currently editing - ${contact!!.fullName}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Medium)
+                    )
+                    Card(modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = Color.White), shape = RoundedCornerShape(0.dp),
+                        content = {
+                            Box(modifier = Modifier.fillMaxWidth()
+                                .background(color = colorResource(id = R.color.orange))
+                                .padding(16.dp), contentAlignment = Alignment.CenterStart
+                            ) {
+                                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+                                    Text("Currently editing - ${contact!!.fullName}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Medium)
+                                }
                             }
                         }
-                    }
-                )
-
-                if(currentTab == "Personal"){
-                    EditBirthdayFirstPage()
-                }
-                if(currentTab == "Contact"){
-                    EditBirthdaySecondPage(
-                        phoneNumber = phoneNumber,
-                        onPhoneNumberChange = {phoneNumber = it},
-                        emailAddress = emailAddress,
-                        onEmailAddressChange = {emailAddress = it},
-                        instagram = instagram,
-                        onInstagramChange = {instagram = it},
-                        twitter = twitter,
-                        onTwitterChange = {twitter = it}
                     )
-                }
-                if(currentTab == "Reminder"){
-                    EditBirthdayThirdPage()
-                }
 
+                    if(currentTab == "Personal"){
+                        EditBirthdayFirstPage()
+                    }
+                    if(currentTab == "Contact"){
+                        EditBirthdaySecondPage()
+                    }
+                    if(currentTab == "Reminder"){
+                        EditBirthdayThirdPage()
+                    }
+
+                    if (contactOperationState is ContactOperationState.Loading) {
+                        Loading()
+                    }
+                }
             }
-
         }
     }
 }

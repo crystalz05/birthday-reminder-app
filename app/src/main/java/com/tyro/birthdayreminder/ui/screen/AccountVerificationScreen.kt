@@ -62,6 +62,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.navigation.Screen
@@ -72,20 +73,27 @@ import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.Pr
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
 import com.tyro.birthdayreminder.view_model.AuthViewModel
+import com.tyro.birthdayreminder.view_model.LoginFormViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountVerificationScreen(
     navHostController: NavHostController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    loginFormViewModel: LoginFormViewModel = hiltViewModel()
 ) {
     val imageUrl by authViewModel.imageUrl.collectAsState()
 
     var password by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        Log.d("ViewModel", "printing out : ${imageUrl}")
+    val fullName by authViewModel.fullName.collectAsState()
+    val email by authViewModel.email.collectAsState()
+
+    val formState by loginFormViewModel.formState.collectAsState()
+
+    LaunchedEffect(Unit){
+        email?.let { loginFormViewModel.onEmailChange(it) }
     }
 
     Scaffold(
@@ -159,15 +167,18 @@ fun AccountVerificationScreen(
                                     )
                                 }
                                 Spacer(Modifier.height(8.dp))
-                                Text("Paul Michael",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Normal)
-                                Text("mikebingp@gmail.com",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                                    fontWeight = FontWeight.Normal)
-
+                                fullName?.let {
+                                    Text(it,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Normal)
+                                }
+                                email?.let {
+                                    Text(it,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                                        fontWeight = FontWeight.Normal)
+                                }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
@@ -179,7 +190,7 @@ fun AccountVerificationScreen(
                 TextField(modifier = Modifier
                     .fillMaxWidth(),
                     leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, tint = MaterialTheme.colorScheme.primary, contentDescription = "Relationship") },
-                    value = password, onValueChange = {password = it},
+                    value = formState.password, onValueChange = {loginFormViewModel.onPasswordChange(it)},
                     label = { Text("Password", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(

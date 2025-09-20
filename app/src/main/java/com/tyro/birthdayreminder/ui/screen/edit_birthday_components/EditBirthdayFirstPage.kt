@@ -93,7 +93,6 @@ fun EditBirthdayFirstPage(
     val context = LocalContext.current
 
     val formState by contactFormViewModel.formState.collectAsState()
-    Log.d("view model", formState.photo.toString())
     var showDatePicker by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) }

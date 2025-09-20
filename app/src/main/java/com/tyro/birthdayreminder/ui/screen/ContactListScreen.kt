@@ -1,4 +1,4 @@
-package com.tyro.birthdayreminder.ui.screen.home_screen_items
+package com.tyro.birthdayreminder.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -116,9 +116,9 @@ fun UpComingBirthdays(
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 titleCase("${Month(month)} $day"), modifier = Modifier
-                                .border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)), shape = RoundedCornerShape(10.dp))
-                                .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
+                                    .border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)), shape = RoundedCornerShape(10.dp))
+                                    .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                    .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Light
                             )
                             Text("In ${daysLeft(contact.birthday)} days", modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)

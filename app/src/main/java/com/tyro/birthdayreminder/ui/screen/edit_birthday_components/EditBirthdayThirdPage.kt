@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,15 +38,28 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.custom_class.CustomSwitch
 import com.tyro.birthdayreminder.custom_class.NotificationSettingsCard
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditBirthdayThirdPage() {
+fun EditBirthdayThirdPage(
+    contactFormViewModel: ContactFormViewModel = hiltViewModel()
+) {
+
+    val formState by contactFormViewModel.formState.collectAsState()
+
+    val twoWeeks = formState.reminders.contains("2w")
+    val oneWeek = formState.reminders.contains("1w")
+    val threeDays = formState.reminders.contains("3d")
+    val onDay = formState.reminders.contains("0d")
+
+
     Column(modifier = Modifier
         .padding(16.dp)
         .fillMaxSize(),
@@ -85,8 +99,8 @@ fun EditBirthdayThirdPage() {
                                 R.drawable.baseline_calendar_month_24,
                                 title = "2 Weeks Before",
                                 subTitle = "Perfect time to start planning",
-                                active = switch2Weeks,
-                                toggleActive = { switch2Weeks = !switch2Weeks  }
+                                active = twoWeeks,
+                                toggleActive = { contactFormViewModel.on2WeeksToggled() }
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -95,8 +109,8 @@ fun EditBirthdayThirdPage() {
                                 R.drawable.baseline_access_alarms_24,
                                 title = "1 Week Before",
                                 subTitle = "Get ready for the celebration",
-                                active = switch1Weeks,
-                                toggleActive = { switch1Weeks = !switch1Weeks  }
+                                active = oneWeek,
+                                toggleActive = { contactFormViewModel.on1WeekToggled()  }
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -105,8 +119,8 @@ fun EditBirthdayThirdPage() {
                                 R.drawable.baseline_notifications_active_24,
                                 title = "3 Days Before",
                                 subTitle = "Last chance to prepare",
-                                active = switch3Days,
-                                toggleActive = { switch3Days = !switch3Days  }
+                                active = threeDays,
+                                toggleActive = { contactFormViewModel.on3DaysToggled()  }
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -115,10 +129,9 @@ fun EditBirthdayThirdPage() {
                                 R.drawable.baseline_phonelink_ring_24,
                                 title = "On The Day",
                                 subTitle = "Morning birthday reminder",
-                                active = switchOnDay,
-                                toggleActive = { switchOnDay = !switchOnDay  }
+                                active = onDay,
+                                toggleActive = { contactFormViewModel.onDayToggled()  }
                             )
-
 
                             Spacer(modifier = Modifier.height(16.dp))
                             HorizontalDivider(thickness = 1.dp)
@@ -134,7 +147,7 @@ fun EditBirthdayThirdPage() {
                                 )
                                 Column {
                                     Text("Notification Settings", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                                    Text("All reminders will be sent at 9:00 AM in your local timezone. You can customize the time in Settings.",
+                                    Text("All reminders will be sent at 9:00 AM in your local timezone.",
                                         fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface,
                                         style = MaterialTheme.typography.labelMedium
                                     )

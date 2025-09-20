@@ -29,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,23 +41,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
-
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBirthdaySecondPage(
-    phoneNumber: String,
-    onPhoneNumberChange:(String)-> Unit,
-    emailAddress: String,
-    onEmailAddressChange:(String)-> Unit,
-    instagram: String,
-    onInstagramChange:(String)-> Unit,
-    twitter: String,
-    onTwitterChange:(String)-> Unit,
+    contactFormViewModel: ContactFormViewModel = hiltViewModel()
 ){
+
+    val formState by contactFormViewModel.formState.collectAsState()
+
     Column(modifier = Modifier
         .padding(16.dp).fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -82,13 +81,13 @@ fun EditBirthdaySecondPage(
                             Text("Add their contact details to stay connected", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground)
 
                             Spacer(modifier = Modifier.height(8.dp))
-                            EditTextFieldItem(fieldName = "Phone Number", fieldValue = phoneNumber, onChange = {onPhoneNumberChange(it)}, R.drawable.baseline_call_24)
+                            EditTextFieldItem(fieldName = "Phone Number", fieldValue = formState.phoneNumber, onChange = {contactFormViewModel.onPhoneNumberChange(it)}, R.drawable.baseline_call_24)
                             Spacer(modifier = Modifier.height(16.dp))
-                            EditTextFieldItem(fieldName = "Email Address", fieldValue = emailAddress, onChange = {onEmailAddressChange(it)}, R.drawable.baseline_email_24)
+                            EditTextFieldItem(fieldName = "Email Address", fieldValue = formState.email, onChange = {contactFormViewModel.onEmailChange(it)}, R.drawable.baseline_email_24)
                             Spacer(modifier = Modifier.height(16.dp))
-                            EditTextFieldItem(fieldName = "Instagram", fieldValue = instagram, onChange = {onInstagramChange(it)}, R.drawable.instagram_svgrepo_com)
+                            EditTextFieldItem(fieldName = "Instagram", fieldValue = formState.instagram, onChange = {contactFormViewModel.onInstagramChange(it)}, R.drawable.instagram_svgrepo_com)
                             Spacer(modifier = Modifier.height(16.dp))
-                            EditTextFieldItem(fieldName = "Twitter", fieldValue = twitter, onChange = {onTwitterChange(it)}, R.drawable.twitter_svgrepo_com)
+                            EditTextFieldItem(fieldName = "Twitter", fieldValue = formState.twitter, onChange = {contactFormViewModel.onTwitterChange(it)}, R.drawable.twitter_svgrepo_com)
                             Spacer(modifier = Modifier.height(16.dp))
                             HorizontalDivider(thickness = 1.dp)
                             Spacer(Modifier.height(24.dp))
@@ -143,25 +142,11 @@ fun EditTextFieldItem(fieldName: String, fieldValue: String, onChange: (String)-
 }
 
 
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun EditBirthdaySecondPagePreview(){
-
-    val phoneNumber = remember { mutableStateOf("") }
-    val emailAddress = remember { mutableStateOf("") }
-    val instagram = remember { mutableStateOf("") }
-    val twitter = remember { mutableStateOf("") }
-
-    BirthdayReminderTheme {
-        EditBirthdaySecondPage(
-            phoneNumber = phoneNumber.value,
-            onPhoneNumberChange = {phoneNumber.value = it},
-            emailAddress = phoneNumber.value,
-            onEmailAddressChange = {emailAddress.value = it},
-            instagram = phoneNumber.value,
-            onInstagramChange = {instagram.value = it},
-            twitter = phoneNumber.value,
-            onTwitterChange = {twitter.value = it},
-        )
-    }
-}
+//@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
+//@Composable
+//fun EditBirthdaySecondPagePreview(){
+//
+//    BirthdayReminderTheme {
+//        EditBirthdaySecondPage()
+//    }
+//}

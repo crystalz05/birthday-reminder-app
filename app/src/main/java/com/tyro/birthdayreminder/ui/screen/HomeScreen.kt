@@ -74,6 +74,7 @@ import com.tyro.birthdayreminder.ui.screen.home_screen_items.UpComingBirthdays
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
+import kotlinx.coroutines.delay
 import java.time.YearMonth
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -103,9 +104,6 @@ fun HomeScreen(
     }
 
     val connectivity by connectivityViewModel.status.collectAsState()
-
-    val refreshing by birthdayContactViewModel.isRefreshing.collectAsState()
-
 
 
     val tabs = listOf(
@@ -149,8 +147,6 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                                 shape = CircleShape
                             )){
-                            Icon(modifier = Modifier.fillMaxSize(), tint = Color.Gray,
-                                imageVector = Icons.Filled.AccountCircle, contentDescription = "")
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = "Profile photo",
@@ -267,7 +263,11 @@ fun HomeScreen(
                 }
 
                 if (contactOperationState is ContactOperationState.Loading) {
-                    Loading()
+                    Loading(
+                        retry = {
+                            birthdayContactViewModel.loadContacts(showLoading = true)
+                        }
+                    )
                 }
             }
         }

@@ -124,7 +124,11 @@ fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, da
 
                         Box(modifier = Modifier.background(shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surface).height(60.dp), Alignment.Center){
-                            RemainingTime(monthLeft!!, dayLeft!!)
+                            if (monthLeft != null) {
+                                if (dayLeft != null) {
+                                    RemainingTime(monthLeft, dayLeft)
+                                }
+                            }
                         }
                         Spacer(Modifier.height(8.dp))
                         Text("until next birthday", color = MaterialTheme.colorScheme.onSurface,

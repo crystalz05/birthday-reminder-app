@@ -61,6 +61,8 @@ fun ProfilePhotoSection(navHostController: NavHostController, authViewModel: Aut
                             model = imageUrl,
                             contentDescription = "Profile Photo",
                             contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.baseline_person_24),
+                            error = painterResource(id = R.drawable.baseline_person_24),
                             modifier = Modifier.clip(CircleShape).size(100.dp)
                         )
                     }

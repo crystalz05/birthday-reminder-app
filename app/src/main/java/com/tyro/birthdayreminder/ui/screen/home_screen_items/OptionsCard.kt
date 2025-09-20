@@ -119,7 +119,7 @@ fun OptionsCard(
                 ) {
                 Column {
                     Text("Total Contacts",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Normal)
                     Text("${contacts.size}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                 }
@@ -143,7 +143,7 @@ fun OptionsCard(
             ) {
                 Column {
                     Text("This Month",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Normal)
                     Text("${thisMonthBirthdays.size}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                 }

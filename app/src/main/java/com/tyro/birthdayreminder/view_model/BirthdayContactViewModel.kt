@@ -53,7 +53,7 @@ class BirthdayContactViewModel @Inject constructor(
             result.onSuccess { contacts ->
                 _isRefreshing.value = false
                 _contacts.update { contacts }
-                _contactOperationState.update { ContactOperationState.Idle }
+                _contactOperationState.update { ContactOperationState.Success(contacts) }
             }.onFailure {
                 _isRefreshing.value = false
                 _uiEvent.send(UiEvent.ShowSnackBar("Failed to load contacts"))
@@ -65,17 +65,24 @@ class BirthdayContactViewModel @Inject constructor(
     fun loadSingleContact(contactId: String, showLoading : Boolean = true, pullDown: Boolean = false){
         viewModelScope.launch {
             if(pullDown)_isRefreshing.value = true
+            if(showLoading) _contactOperationState.update { ContactOperationState.Loading }
             val result = birthdayContactRepository.getSingleContact(contactId)
 
             result.onSuccess { contact ->
                 _isRefreshing.value = false
                 _contactsDetail.update { contact }
+                _contactOperationState.update { ContactOperationState.Success(contacts) }
+
             }.onFailure {
                 _isRefreshing.value = false
                 _uiEvent.send(UiEvent.ShowSnackBar("Failed to load Contact"))
                 _contactOperationState.update { ContactOperationState.Error("Failed to load Contact") }
             }
         }
+    }
+
+    fun clearContactDetail(){
+        _contactsDetail.update { null }
     }
 
     fun addContact(contact: ContactFormState){
@@ -93,4 +100,37 @@ class BirthdayContactViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteContact(contactId: String){
+        viewModelScope.launch {
+            _contactOperationState.update { ContactOperationState.Loading }
+
+            val result = birthdayContactRepository.deleteContact(contactId)
+
+            result.onSuccess { contact ->
+                _uiEvent.send(UiEvent.ShowSnackBar("${contact.fullName} deleted"))
+                _uiEvent.send(UiEvent.Navigate(Screen.Home.route))
+                _contactOperationState.update { ContactOperationState.Success(contact) }
+            }.onFailure { e->
+                _contactOperationState.update { ContactOperationState.Error(e.message ?: "Error deleting contact") }
+            }
+        }
+    }
+
+    fun updateContact(contactId: String, contact: ContactFormState){
+        viewModelScope.launch {
+            _contactOperationState.update { ContactOperationState.Loading }
+
+            val result = birthdayContactRepository.updateContact(contactId, contact)
+
+            result.onSuccess { contact ->
+                _uiEvent.send(UiEvent.ShowSnackBar("Birthday Contact Updated"))
+                _uiEvent.send(UiEvent.Navigate(Screen.BirthDayDetail.passContactId(contact.id)))
+                _contactOperationState.update { ContactOperationState.Success(contact) }
+            }.onFailure { e->
+                _contactOperationState.update { ContactOperationState.Error(e.message ?: "Error saving contact") }
+            }
+        }
+    }
+
 }

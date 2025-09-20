@@ -1,6 +1,7 @@
 package com.tyro.birthdayreminder.repository
 
 import android.graphics.Bitmap
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tyro.birthdayreminder.custom_class.compressBitmap
@@ -21,12 +22,6 @@ class BirthdayContactRepository @Inject constructor(
     private val fireStore: FirebaseFirestore,
     private val supabase: SupabaseClient)
 {
-
-    private val contacts = supabase.postgrest["contacts"]
-
-    suspend fun addContact(contact: Contact) {
-        contacts.insert(contact)
-    }
 
     suspend fun saveContact(form: ContactFormState): Result<Contact> {
         return try {
@@ -61,69 +56,49 @@ class BirthdayContactRepository @Inject constructor(
             Result.failure(e)
         }
     }
-//    suspend fun saveContact(form: ContactFormState): Result<Contact>{
-//        return try{
-//            val contactId = UUID.randomUUID().toString()
-//            val uid = auth.currentUser?.uid?: throw Exception("Not Logged in")
-//
-//            val photoUrl = form.photo?.let { uploadContactPhoto(uid, contactId, it).getOrThrow() }
-//
-//
-//            val contact = Contact(
-//                id = contactId,
-//                userId = uid,
-//                fullName = form.fullName,
-//                photo = photoUrl,
-//                birthday = form.birthday,
-//                relationship = form.relationship.ifBlank { null },
-//                personalNote = form.personalNote.ifBlank { null },
-//                phoneNumber = form.phoneNumber,
-//                email = form.email.ifBlank { null },
-//                instagram = form.instagram.ifBlank { null },
-//                twitter = form.twitter.ifBlank { null },
-//                reminders = form.reminders
-//            )
-//
-//            supabase.from("contacts")
-//                .insert(contact).decodeSingle<Contact>()
-//
-//            Result.success(contact)
-//        }catch (e: Exception){
-//            Result.failure(e)
-//        }
-//    }
 
-    suspend fun updateContact(contactId: String, uid: String, form: ContactFormState): Result<Contact> {
+
+    suspend fun updateContact(contactId: String, form: ContactFormState): Result<Contact> {
         return try {
-            val photoUrl = form.photo?.let {
-                uploadContactPhoto(uid, contactId, it)
-            }
+            val uid = auth.currentUser?.uid ?: throw Exception("Not Logged in")
 
-            val updates = mapOf(
-                "fullName" to form.fullName,
-                "photo" to photoUrl,
-                "birthday" to form.birthday,
-                "relationship" to form.relationship.ifBlank { null },
-                "personalNote" to form.personalNote.ifBlank { null },
-                "phoneNumber" to form.phoneNumber,
-                "email" to form.email.ifBlank { null },
-                "instagram" to form.instagram.ifBlank { null },
-                "twitter" to form.twitter.ifBlank { null },
-                "reminders" to form.reminders,
-                "updatedAt" to System.currentTimeMillis()
+            val photoUrl = form.photo?.let { uploadContactPhoto(uid, contactId, it).getOrThrow() }
+
+            val existing = supabase
+                .from("contacts")
+                .select {
+                    filter { eq("id", contactId); eq("userId", uid) }
+                }
+                .decodeSingle<Contact>()
+
+            val updates = existing.copy(
+                fullName = form.fullName,
+                birthday = form.birthday,
+                relationship = form.relationship.ifBlank { null },
+                personalNote = form.personalNote.ifBlank { null },
+                phoneNumber = form.phoneNumber,
+                email = form.email.ifBlank { null },
+                instagram = form.instagram.ifBlank { null },
+                twitter = form.twitter.ifBlank { null },
+                reminders = form.reminders,
+                // only overwrite photo if a new one exists
+                photo = photoUrl ?: existing.photo
             )
 
             val updated = supabase
                 .from("contacts")
                 .update(updates) {
                     filter {
+                        eq("userId", uid)
                         eq("id", contactId)
                     }
+                    select()
                 }
                 .decodeSingle<Contact>()
 
             Result.success(updated)
         } catch (e: Exception) {
+            Log.e("updateContact", "Failed to update: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -155,6 +130,19 @@ class BirthdayContactRepository @Inject constructor(
                 .decodeSingle<Contact>()
             Result.success(contact)
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteContact(contactId: String): Result<Contact>{
+        return try {
+            val deleted = supabase.from("contacts")
+                .delete {
+                    filter { eq("id", contactId) }
+                    select() }
+                .decodeSingle<Contact>()
+            Result.success(deleted)
+        }catch (e: Exception){
             Result.failure(e)
         }
     }

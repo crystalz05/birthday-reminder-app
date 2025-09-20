@@ -41,8 +41,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.custom_class.getDayOfYMonth
 import com.tyro.birthdayreminder.custom_class.getMonth
@@ -71,8 +74,7 @@ fun TodayBirthday(
     val todayBirthDay = contacts.filter { contact -> getMonth(contact.birthday) == LocalDate.now().monthValue
             && getDayOfYMonth(contact.birthday) == LocalDate.now().dayOfMonth }
 
-    val items = (1..3).toList()
-//    val items = emptyList<String>()
+    val todayBirthdayCount = todayBirthDay.size
 
     LazyColumn(Modifier.heightIn(min = 100.dp, max = 400.dp).fillMaxWidth()
         .background(
@@ -122,7 +124,7 @@ fun TodayBirthday(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "${items.size}",
+                            text = "$todayBirthdayCount",
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -143,7 +145,7 @@ fun TodayBirthday(
         }
         item {
             todayBirthDay.forEach{contact ->
-                Card(modifier = Modifier.fillMaxWidth().clickable {navHostController.navigate(Screen.BirthDayDetail.route)  }
+                Card(modifier = Modifier.fillMaxWidth().clickable {navHostController.navigate(Screen.BirthDayDetail.passContactId(contact.id))  }
                     .padding(top = 5.dp), // ✅ Push first item down ,
                     colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.2f),
                         contentColor = Color.White), shape = RoundedCornerShape(8.dp)
@@ -153,9 +155,14 @@ fun TodayBirthday(
                             Box(modifier = Modifier
                                 .size(60.dp)
                                 .background(color = Color.White.copy(alpha = 0.2f), shape = CircleShape)){
-                                Icon(modifier = Modifier.fillMaxSize(), tint = Color.White,
-                                    imageVector = Icons.Filled.AccountCircle, contentDescription = "")
-                            }
+                                AsyncImage(
+                                    model = contact.photo,
+                                    contentDescription = "Profile Photo",
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                    error = painterResource(id = R.drawable.baseline_person_24),
+                                    modifier = Modifier.clip(CircleShape).size(60.dp)
+                                )                            }
                             Column {
                                 Text(contact.fullName, fontSize = 20.sp,
                                     color = Color.White,
