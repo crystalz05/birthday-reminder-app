@@ -20,6 +20,7 @@ import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AccountVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AddBirthdayScreen
 import com.tyro.birthdayreminder.ui.screen.BirthdayDetailScreen
+import com.tyro.birthdayreminder.ui.screen.ContactListScreen
 import com.tyro.birthdayreminder.ui.screen.EditBirthdayScreen
 import com.tyro.birthdayreminder.ui.screen.HomeScreen
 import com.tyro.birthdayreminder.ui.screen.LoginScreen
@@ -107,6 +108,15 @@ fun Navigation(
         }
         composable(Screen.EmailVerification.route){
             AccountEmailVerificationScreen(navHostController)
+        }
+
+        composable(Screen.ContactList.route,
+            arguments = listOf(navArgument("listType"){ type = NavType.StringType })
+        ){
+            ContactListScreen(
+                navHostController =  navHostController,
+                birthdayContactViewModel = birthdayContactViewModel
+            )
         }
     }
 

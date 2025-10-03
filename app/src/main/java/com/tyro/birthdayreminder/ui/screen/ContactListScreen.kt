@@ -17,19 +17,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -54,17 +62,20 @@ import com.tyro.birthdayreminder.custom_class.getMonthAndDay
 import com.tyro.birthdayreminder.custom_class.getYear
 import com.tyro.birthdayreminder.custom_class.titleCase
 import com.tyro.birthdayreminder.navigation.Screen
+import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldAction
+import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldNavigation
+import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldTitle
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import kotlinx.datetime.Month
 import java.time.LocalDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun UpComingBirthdays(
+fun ContactListScreen(
     navHostController: NavHostController,
     birthdayContactViewModel: BirthdayContactViewModel
 ) {
-
 
     val contacts by birthdayContactViewModel.contacts.collectAsState()
 
@@ -74,59 +85,109 @@ fun UpComingBirthdays(
     }
     val currentYear = LocalDate.now().year
 
-    Card(modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
-            contentColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ){
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.DateRange, contentDescription = "", tint = MaterialTheme.colorScheme.primary)
-                Text("Upcoming Birthdays", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleLarge)
-            }
-            Spacer(Modifier.height(24.dp))
 
-            upComingContacts.forEach { contact ->
-                val (month, day) = getMonthAndDay(contact.birthday)
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(
-                            color = Color.Black.copy(alpha = 0.2f),
-                            bounded = true
-                        )
-                    ) { navHostController.navigate(Screen.BirthDayDetail.passContactId(contact.id)) }.padding(vertical = 24.dp)) {
-                    Box(modifier = Modifier.background(color = Color.Gray, shape = CircleShape).size(50.dp), Alignment.Center){
-
-                        AsyncImage(
-                            model = contact.photo,
-                            contentDescription = "Profile Photo",
-                            contentScale = ContentScale.Crop,
-                            placeholder = painterResource(id = R.drawable.baseline_person_24),
-                            error = painterResource(id = R.drawable.baseline_person_24),
-                            modifier = Modifier.clip(CircleShape).size(100.dp)
-                        )
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column {
-                            Text(contact.fullName, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
-                            Text("Turning ${currentYear-getYear(contact.birthday)}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                titleCase("${Month(month)} $day"), modifier = Modifier
-                                    .border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)), shape = RoundedCornerShape(10.dp))
-                                    .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                    .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Light
-                            )
-                            Text("In ${daysLeft(contact.birthday)} days", modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
-                        }
-                    }
-                }
-                HorizontalDivider(thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
+    Scaffold(
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                TopAppBar(
+                    title = { ScaffoldTitle("Contact List") },
+                    navigationIcon = { ScaffoldNavigation(navHostController) },
+                    actions = {ScaffoldAction(Icons.Default.Person) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
+                )
             }
         }
+
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
+            Card(modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ){
+                Column(modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.DateRange, contentDescription = "", tint = MaterialTheme.colorScheme.primary)
+                        Text("Upcoming Birthdays", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleLarge)
+                    }
+                    Spacer(Modifier.height(24.dp))
+
+                    contacts.forEach { contact ->
+                        val (month, day) = getMonthAndDay(contact.birthday)
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple(
+                                        color = Color.Black.copy(alpha = 0.2f),
+                                        bounded = true
+                                    )
+                                ) {
+                                    navHostController.navigate(
+                                        Screen.BirthDayDetail.passContactId(
+                                            contact.id
+                                        )
+                                    )
+                                }
+                                .padding(vertical = 24.dp)) {
+                            Box(modifier = Modifier
+                                .background(color = Color.Gray, shape = CircleShape)
+                                .size(50.dp), Alignment.Center){
+
+                                AsyncImage(
+                                    model = contact.photo,
+                                    contentDescription = "Profile Photo",
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                    error = painterResource(id = R.drawable.baseline_person_24),
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .size(100.dp)
+                                )
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text(contact.fullName, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
+                                    Text("Turning ${currentYear-getYear(contact.birthday)}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        titleCase("${Month(month)} $day"), modifier = Modifier
+                                            .border(
+                                                border = BorderStroke(
+                                                    1.dp,
+                                                    color = MaterialTheme.colorScheme.primary.copy(
+                                                        alpha = 0.6f
+                                                    )
+                                                ), shape = RoundedCornerShape(10.dp)
+                                            )
+                                            .background(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                            )
+                                            .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Light
+                                    )
+                                    Text("In ${daysLeft(contact.birthday)} days", modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
+                                }
+                            }
+                        }
+                        HorizontalDivider(thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
+                    }
+                }
+            }
+        }
+
     }
+
+
 }

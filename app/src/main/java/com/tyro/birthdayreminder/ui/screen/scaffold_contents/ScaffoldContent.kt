@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -43,8 +44,8 @@ fun ScaffoldNavigation(navHostController: NavHostController){
 
 
 @Composable
-fun ScaffoldAction(){
-    Icon(imageVector = Icons.Default.Notifications,
+fun ScaffoldAction(icon: ImageVector){
+    Icon(imageVector = icon,
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onBackground,
     )

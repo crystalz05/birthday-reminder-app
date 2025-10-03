@@ -107,7 +107,7 @@ fun OptionsCard(
     }
     Spacer(Modifier.height(16.dp))
     Row{
-        Card(modifier = Modifier.weight(1f),
+        Card(modifier = Modifier.weight(1f).clickable { navHostController.navigate(Screen.ContactList.route) },
             border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White), shape = RoundedCornerShape(8.dp),
