@@ -43,16 +43,19 @@ fun Navigation(
     authViewModel: AuthViewModel,
     themeViewModel: ThemeViewModel,
     birthdayContactViewModel: BirthdayContactViewModel,
-    connectivityViewModel: ConnectivityViewModel
+    connectivityViewModel: ConnectivityViewModel,
+    startDestination: String = Screen.Splash.route
+
 ) {
 
     NavHost(
         navController = navHostController,
-        startDestination =Screen.Splash.route,
+        startDestination = startDestination,
         enterTransition ={ fadeIn(animationSpec = tween(100)) },
         exitTransition = { fadeOut(animationSpec = tween(100)) },
         popEnterTransition = { fadeIn(animationSpec = tween(100)) },
         popExitTransition = { fadeOut(animationSpec = tween(100)) },
+
     ){
         composable(Screen.Splash.route){
             SplashScreen(
@@ -113,7 +116,9 @@ fun Navigation(
         composable(Screen.ContactList.route,
             arguments = listOf(navArgument("listType"){ type = NavType.StringType })
         ){
+            backStackEntry -> val listType = backStackEntry.arguments?.getString("listType")
             ContactListScreen(
+                listType,
                 navHostController =  navHostController,
                 birthdayContactViewModel = birthdayContactViewModel
             )

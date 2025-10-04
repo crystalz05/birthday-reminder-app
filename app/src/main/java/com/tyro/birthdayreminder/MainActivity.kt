@@ -1,6 +1,7 @@
 package com.tyro.birthdayreminder
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -39,6 +40,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.ThemeMode
 import com.tyro.birthdayreminder.navigation.Navigation
+import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AccountVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AddBirthdayScreen
@@ -77,8 +79,9 @@ class MainActivity : ComponentActivity() {
             requestNotificationPermission()
         }
 
-        setContent {
+        val startDestination = intent?.getStringExtra("route") ?: Screen.Splash.route
 
+        setContent {
 
             val themeMode by themeViewModel.themeMode.collectAsState()
             val isSystemDark = isSystemInDarkTheme()
@@ -109,7 +112,8 @@ class MainActivity : ComponentActivity() {
                         authViewModel = authViewModel,
                         themeViewModel =  themeViewModel,
                         birthdayContactViewModel = birthdayContactViewModel,
-                        connectivityViewModel = connectivityViewModel
+                        connectivityViewModel = connectivityViewModel,
+                        startDestination = startDestination
                     )
 //                NotificationScreen(navHostController = rememberNavController())
 //                CalendarScreen(navHostController = rememberNavController())
@@ -132,6 +136,5 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
 }
 

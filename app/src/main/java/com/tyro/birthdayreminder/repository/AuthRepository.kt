@@ -30,6 +30,8 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.tyro.birthdayreminder.BuildConfig
 import com.tyro.birthdayreminder.custom_class.compressBitmap
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.request.UpsertRequestBuilder
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
 import java.io.ByteArrayOutputStream
@@ -46,6 +48,9 @@ class AuthRepository @Inject constructor(
             val firebaseUser = authResult.user?: return Result.failure(Exception("User registration failed"))
 
             firebaseUser.sendEmailVerification().await()
+
+            val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+            saveFcmToken(firebaseUser.uid, token)
 
             val user = User(
                 uid = firebaseUser.uid,
@@ -79,6 +84,11 @@ class AuthRepository @Inject constructor(
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val user = authResult.user
 
+            val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+            if (user != null) {
+                saveFcmToken(user.uid, token)
+            }
+
             if(user!= null){
                 if(user.isEmailVerified){
                     LoginResult.Verified(user)
@@ -100,6 +110,8 @@ class AuthRepository @Inject constructor(
 
             if (user != null) {
                 if (user.isEmailVerified) {
+                    val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+                    saveFcmToken(user.uid, token)
                     LoginResult.Verified(user)
                 } else {
                     LoginResult.Unverified(user)
@@ -120,6 +132,23 @@ class AuthRepository @Inject constructor(
                 .await()
             Result.success(Unit)
         }catch (e: Exception){
+            Result.failure(e)
+        }
+    }
+
+    suspend fun saveFcmToken(uid: String, fcmToken: String): Result<Unit> {
+        return try {
+            supabase.from("user_tokens")
+                .upsert(
+                    listOf(
+                        mapOf(
+                            "user_id" to uid,
+                            "fcm_token" to fcmToken
+                        )
+                    )
+                )
+            Result.success(Unit)
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -156,6 +185,10 @@ class AuthRepository @Inject constructor(
         auth.signOut()
     }
 
+    fun getUid(): String? {
+        return auth.uid
+    }
+
     fun currentUser(): FirebaseUser? = auth.currentUser
 
     suspend fun getUserData(uid: String): DocumentSnapshot{
@@ -174,5 +207,6 @@ private fun mapAuthError(e: Exception): String{
         else -> "Authentication Failed. Please try again."
     }
 }
+
 
 private val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

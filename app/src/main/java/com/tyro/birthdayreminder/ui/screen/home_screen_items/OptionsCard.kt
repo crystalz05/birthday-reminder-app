@@ -107,7 +107,8 @@ fun OptionsCard(
     }
     Spacer(Modifier.height(16.dp))
     Row{
-        Card(modifier = Modifier.weight(1f).clickable { navHostController.navigate(Screen.ContactList.route) },
+        Card(modifier = Modifier.weight(1f)
+            .clickable { navHostController.navigate(Screen.ContactList.passListType("all_contacts")) },
             border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White), shape = RoundedCornerShape(8.dp),
@@ -131,7 +132,8 @@ fun OptionsCard(
             }
         }
         Spacer(Modifier.width(16.dp))
-        Card(modifier = Modifier.weight(1f),
+        Card(modifier = Modifier.weight(1f)
+            .clickable { navHostController.navigate(Screen.ContactList.passListType("this_month"))  },
             border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Color.White), shape = RoundedCornerShape(8.dp),

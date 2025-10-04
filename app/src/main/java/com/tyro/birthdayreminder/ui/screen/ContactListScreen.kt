@@ -58,9 +58,11 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.custom_class.getDayOfYear
+import com.tyro.birthdayreminder.custom_class.getMonth
 import com.tyro.birthdayreminder.custom_class.getMonthAndDay
 import com.tyro.birthdayreminder.custom_class.getYear
 import com.tyro.birthdayreminder.custom_class.titleCase
+import com.tyro.birthdayreminder.entity.Contact
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldAction
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldNavigation
@@ -73,13 +75,29 @@ import java.time.LocalDate
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ContactListScreen(
+    listType: String?,
     navHostController: NavHostController,
     birthdayContactViewModel: BirthdayContactViewModel
 ) {
 
+    val title: String = when(listType){
+        "all_contacts" -> "All Contacts"
+        "this_month" -> "This Month"
+        else -> ""
+    }
+
     val contacts by birthdayContactViewModel.contacts.collectAsState()
 
-    val upComingContacts = contacts.filter {contact -> getDayOfYear(contact.birthday) > LocalDate.now().dayOfYear  }
+    val currentList: List<Contact> =
+        if (listType == "this_month") {
+            contacts.filter { contact ->
+                getMonth(contact.birthday) == LocalDate.now().monthValue
+            }
+        } else {
+            contacts
+        }
+
+
     fun daysLeft(yearDay: String): Int{
         return getDayOfYear(yearDay) - LocalDate.now().dayOfYear
     }
@@ -116,12 +134,12 @@ fun ContactListScreen(
                     .padding(16.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Default.DateRange, contentDescription = "", tint = MaterialTheme.colorScheme.primary)
-                        Text("Upcoming Birthdays", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold,
+                        Text(title, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.titleLarge)
                     }
                     Spacer(Modifier.height(24.dp))
 
-                    contacts.forEach { contact ->
+                    currentList.forEach { contact ->
                         val (month, day) = getMonthAndDay(contact.birthday)
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier

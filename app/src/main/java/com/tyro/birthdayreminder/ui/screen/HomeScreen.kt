@@ -95,11 +95,13 @@ fun HomeScreen(
 
     var greeting by remember { mutableStateOf("") }
 
+    authViewModel.saveFcmToken()
+
     LaunchedEffect(Unit) {
-        when(getTimeOfDay()){
-            "morning" -> greeting = "Good Morning!"
-            "afternoon" -> greeting = "Good Afternoon!"
-            else -> greeting = "Good Evening!"
+        greeting = when(getTimeOfDay()){
+            "morning" -> "Good Morning!"
+            "afternoon" -> "Good Afternoon!"
+            else -> "Good Evening!"
         }
     }
 

@@ -20,5 +20,7 @@ sealed class Screen(val route: String) {
     object Calendar: Screen("calendar")
     object Profile: Screen("profile")
     object EmailVerification: Screen("email_verification")
-    object ContactList: Screen("contact_list/{listType}")
+    object ContactList: Screen("contact_list/{listType}"){
+        fun passListType(listType: String?) = "contact_list/$listType"
+    }
 }

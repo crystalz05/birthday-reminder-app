@@ -17,26 +17,54 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.tyro.birthdayreminder.MainActivity
+import com.tyro.birthdayreminder.navigation.Screen
+import dagger.hilt.android.AndroidEntryPoint
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MyFirebaseMessagingService: FirebaseMessagingService() {
+
+
+    @Inject
+    lateinit var supabase: SupabaseClient
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d("FCM", "New token: $token")
+        Log.d("FCM from myfirebasemessagingservice", "New token: $token")
 
-        // Send token to Firestore for user-specific notifications
-        saveTokenToServer(token)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = saveTokenToServer(uid, token)
+            result.onSuccess {
+                Log.d("FCM", "Token saved successfully")
+            }.onFailure { e ->
+                Log.e("FCM", "Error saving token", e)
+            }
+        }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
+        val title = message.notification?.title ?: "Reminder"
+        val body = message.notification?.body ?: ""
+        val contactId = message.data["contactId"] // custom data
+
+        Log.d("Messaging Service", contactId.toString())
         if(message.notification != null){
-            showNotification(message.notification?.title, message.notification?.body)
+            showNotification(title, body, contactId)
         }
     }
 
-    private fun showNotification(title: String?, body: String?){
+    private fun showNotification(title: String?, body: String?, contactId: String?){
         val channelId = "default_channel"
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -46,15 +74,12 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
             )
             manager.createNotificationChannel(channel)
         }
-
-        // 🔽 Place your intent + pending intent here
         val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra("route", "details/123")  // pass extra route/data
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("route", Screen.BirthDayDetail.passContactId(contactId))
         }
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(this, channelId)
@@ -68,17 +93,21 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
         manager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
-    private fun saveTokenToServer(token: String){
-
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val db = FirebaseFirestore.getInstance()
-        db.collection("users").document(uid)
-            .update("fcmToken", token)
+    private suspend fun saveTokenToServer(uid: String, fcmToken: String): Result<Unit> {
+        return try {
+            supabase.from("user_tokens")
+                .upsert(
+                    listOf(
+                        mapOf(
+                            "user_id" to uid,
+                            "fcm_token" to fcmToken
+                        )
+                    )
+                )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
 }
-
-
-
-
-

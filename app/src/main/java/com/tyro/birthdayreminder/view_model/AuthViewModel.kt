@@ -60,6 +60,7 @@ class AuthViewModel @Inject constructor(
     init {
         fetchCurrentUser()
     }
+
     fun registerUser(fullName: String, email: String, password: String){
         _authState.update { AuthState.Loading }
 
@@ -216,6 +217,13 @@ class AuthViewModel @Inject constructor(
             _authState.update { AuthState.LoggedOut }
             _uiEvent.send(UiEvent.Navigate(Screen.Login.route))
             _uiEvent.send(UiEvent.ShowSnackBar("Signed out successfully"))
+        }
+    }
+
+    fun saveFcmToken(){
+        viewModelScope.launch {
+            val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+            authRepository.getUid()?.let { authRepository.saveFcmToken(it, token) }
         }
     }
 
