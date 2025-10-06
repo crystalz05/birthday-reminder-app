@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -45,6 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +68,7 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.auth.ContactOperationState
 import com.tyro.birthdayreminder.auth.UiEvent
+import com.tyro.birthdayreminder.custom_class.ContactActionMenu
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.getAge
 import com.tyro.birthdayreminder.custom_class.getAgeOnNextBirthday
@@ -103,6 +106,7 @@ fun BirthdayDetailScreen(
     val name = contact?.fullName
     val relationship = contact?.relationship
     val currentAge = contact?.birthday?.let { getAge(it) }
+    val gender = contact?.gender
     val turningAge = contact?.birthday?.let { getAgeOnNextBirthday(it) }
     val (month, day) = contact?.birthday?.let { getMonthAndDay(it) } ?: (null to null)
     val dayOfWeek = contact?.birthday?.let { getDayOfWeek(it) }
@@ -120,6 +124,9 @@ fun BirthdayDetailScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     val contactState by birthdayContactViewModel.contactOperationState.collectAsState()
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
 
     LaunchedEffect(Unit) {
@@ -195,7 +202,8 @@ fun BirthdayDetailScreen(
             }
             is ContactOperationState.Success <*> ->{
                 if(contact != null){
-                    LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                    LazyColumn( state = listState, modifier = Modifier.padding(innerPadding)) {
+
                         item {
                             Box(modifier = Modifier.fillMaxSize()){
                                 if (showDialog) {
@@ -232,10 +240,20 @@ fun BirthdayDetailScreen(
                                             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
                                             shape = CircleShape
                                         ), Alignment.Center){
-                                        Box(Modifier.size(110.dp, 110.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), shape = CircleShape), Alignment.Center){
-                                            Box(Modifier.size(100.dp, 100.dp).background(Color.White, shape = CircleShape), Alignment.Center, content = {})
+                                        Box(Modifier
+                                            .size(110.dp, 110.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                    alpha = 0.2f
+                                                ), shape = CircleShape
+                                            ), Alignment.Center){
+                                            Box(Modifier
+                                                .size(100.dp, 100.dp)
+                                                .background(Color.White, shape = CircleShape), Alignment.Center, content = {})
                                             AsyncImage(
-                                                modifier = Modifier.size(100.dp).alpha(1f)
+                                                modifier = Modifier
+                                                    .size(100.dp)
+                                                    .alpha(1f)
                                                     .align(Alignment.Center)
                                                     .clip(CircleShape),
                                                 model = photoUrl,
@@ -270,6 +288,15 @@ fun BirthdayDetailScreen(
                                                     shape = RoundedCornerShape(16.dp)
                                                 )
                                                 .padding(horizontal = 12.dp, vertical = 4.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("$gender", style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold, color= MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier
+                                                .background(
+                                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
+                                                    shape = RoundedCornerShape(16.dp)
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 4.dp))
                                     }
                                     Spacer(Modifier.height(20.dp))
                                 }
@@ -277,32 +304,31 @@ fun BirthdayDetailScreen(
                                     .align(Alignment.TopEnd)
                                     .padding(end = 16.dp)
                                 ) {
-                                    IconButton(
-                                        colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                                        onClick = {navHostController.navigate(Screen.EditBirthDay.passContactId(contactId))}) {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit, contentDescription = null,
-                                            tint = colorResource(id = R.color.orange)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    IconButton(
-                                        colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                                        onClick = {
+                                    ContactActionMenu(
+                                        onEditBirthday = {
+                                            navHostController.navigate(Screen.EditBirthDay.passContactId(contactId))
+                                        },
+                                        onDeleteContact = {
                                             showDialog = true
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete, contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
+                                        },
+                                    )
                                 }
                             }
                             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                                FirstCard(monthLeft, daysLeft, month, day, dayOfWeek, currentAge, turningAge, birthDayDateIntValue)
+                                FirstCard(birthdayContactViewModel)
                                 SecondCard(phoneNumber, email, instagram)
-                                ThirdCard()
+                                if (contactId != null) {
+                                    ThirdCard(
+                                        contactId = contactId,
+                                        birthdayContactViewModel = birthdayContactViewModel,
+                                        onSectionSelected = { section ->
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 0)
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -311,7 +337,6 @@ fun BirthdayDetailScreen(
             else -> Unit
         }
     }
-
 }
 
 //@Preview(showBackground = true)

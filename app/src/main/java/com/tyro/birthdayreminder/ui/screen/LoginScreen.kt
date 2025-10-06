@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.Email
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -79,7 +81,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 fun LoginScreen(navHostController: NavHostController,
                 viewModel: AuthViewModel = hiltViewModel(),
                 loginFormViewModel: LoginFormViewModel =  hiltViewModel()
-                ) {
+) {
 
     val formState by loginFormViewModel.formState.collectAsState()
 
@@ -152,6 +154,7 @@ fun LoginScreen(navHostController: NavHostController,
                                 value = formState.email,
                                 onValueChange = {loginFormViewModel.onEmailChange(it)},
                                 placeholder = { Text("Enter your email")},
+                                singleLine = true,
                                 leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = "")},
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -161,6 +164,8 @@ fun LoginScreen(navHostController: NavHostController,
                                 visualTransformation = if(formState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 onValueChange = {loginFormViewModel.onPasswordChange(it)},
                                 placeholder = { Text("Enter your password")},
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
                                 leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = "") },
                                 trailingIcon = {
                                     IconButton(onClick = {loginFormViewModel.togglePasswordVisibility()}) {
@@ -233,5 +238,3 @@ fun LoginScreen(navHostController: NavHostController,
 //        LoginScreen()
 //    }
 //}
-
-

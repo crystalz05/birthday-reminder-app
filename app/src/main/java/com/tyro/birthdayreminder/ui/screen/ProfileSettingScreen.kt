@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -81,6 +82,8 @@ fun ProfileSettingScreen(
     val authState by authViewModel.authState.collectAsState()
 
     val haptic = LocalHapticFeedback.current
+
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         authViewModel.uiEvent.collect{ event ->
@@ -144,7 +147,7 @@ fun ProfileSettingScreen(
                             onDismissRequest = { showDialog = false },
                             confirmButton = {
                                 TextButton(onClick = {
-                                    authViewModel.signOut()
+                                    authViewModel.signOut(context)
                                     showDialog = false
                                 }) {
                                     Text("Sign Out", color = MaterialTheme.colorScheme.error)

@@ -31,10 +31,9 @@ import kotlinx.coroutines.delay
 fun SplashScreen(
     authViewModel: AuthViewModel,
     onSplashFinished:(String) -> Unit,
-    ){
+){
 
     val authState by authViewModel.authState.collectAsState()
-
     LaunchedEffect(authState) {
         delay(300L)
         when(authState){

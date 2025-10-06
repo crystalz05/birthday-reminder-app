@@ -31,6 +31,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +43,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.getAge
+import com.tyro.birthdayreminder.custom_class.getDayOfWeek
+import com.tyro.birthdayreminder.custom_class.getDaysLeft
+import com.tyro.birthdayreminder.custom_class.getMonthAndDay
 import com.tyro.birthdayreminder.custom_class.getZodiacSign
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.TextStyle
@@ -49,9 +56,12 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, dayOfWeek:String?, currentAge:Int?, turningAge:Int?, birthDayDateIntValue: LocalDate?) {
+fun FirstCard(birthdayContactViewModel: BirthdayContactViewModel) {
 
-    val zodiacSign = birthDayDateIntValue?.let { getZodiacSign(it) }
+    val contact by birthdayContactViewModel.contactDetail.collectAsState()
+
+    val (month, day) = contact?.birthday?.let { getMonthAndDay(it) } ?: (0 to 0)
+    val (months, days) = contact?.birthday?.let { getDaysLeft(it) } ?: (0 to 0)
 
     val zodiacSigns = mapOf(
         "Aries" to "♈",
@@ -82,22 +92,65 @@ fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, da
         "Pisces" to "Compassionate • Artistic"
     )
 
-    val monthText = birthMonth?.let { Month.of(it).getDisplayName(TextStyle.FULL, Locale.getDefault()) }
+    val zodiacSign =  when (month) {
+            1 -> if (day < 20) "Capricorn" else "Aquarius"
+            2 -> if (day < 19) "Aquarius" else "Pisces"
+            3 -> if (day < 21) "Pisces" else "Aries"
+            4 -> if (day < 20) "Aries" else "Taurus"
+            5 -> if (day < 21) "Taurus" else "Gemini"
+            6 -> if (day < 21) "Gemini" else "Cancer"
+            7 -> if (day < 23) "Cancer" else "Leo"
+            8 -> if (day < 23) "Leo" else "Virgo"
+            9 -> if (day < 23) "Virgo" else "Libra"
+            10 -> if (day < 23) "Libra" else "Scorpio"
+            11 -> if (day < 22) "Scorpio" else "Sagittarius"
+            12 -> if (day < 22) "Sagittarius" else "Capricorn"
+            else -> "Unknown"
+    }
+
+    val zodiacElements = mapOf(
+        "Aries" to "Fire Sign",
+        "Leo" to "Fire Sign",
+        "Sagittarius" to "Fire Sign",
+
+        "Taurus" to "Earth Sign",
+        "Virgo" to "Earth Sign",
+        "Capricorn" to "Earth Sign",
+
+        "Gemini" to "Air Sign",
+        "Libra" to "Air Sign",
+        "Aquarius" to "Air Sign",
+
+        "Cancer" to "Water Sign",
+        "Scorpio" to "Water Sign",
+        "Pisces" to "Water Sign"
+    )
+
+    val monthText = month.let { Month.of(it).getDisplayName(TextStyle.FULL, Locale.getDefault()) }
+    val dayOfWeek = contact?.let { getDayOfWeek(it.birthday) }
+    val currentAge = contact?.let { getAge(it.birthday) }
+    val turningAge = currentAge?.let { it+1 }
 
     @Composable
     fun RemainingTime(month: Int, day: Int) {
         Text(
             buildAnnotatedString {
-                if (month > 0) {
-                    append("$month ")
+                if(month  <= 0 && day == 1){
+                    append("Tomorrow")
+                }else if(month <= 0 && day == 0){
+                    append("Today")
+                }else{
+                    if (month > 0) {
+                        append("$month ")
+                        pushStyle(SpanStyle(fontWeight = FontWeight.Light, fontSize = 18.sp))
+                        append("month${if (month > 1) "s" else ""}, ")
+                        pop()
+                    }
+                    append("$day ")
                     pushStyle(SpanStyle(fontWeight = FontWeight.Light, fontSize = 18.sp))
-                    append("month${if (month > 1) "s" else ""}, ")
+                    append("day${if (day > 1) "s" else ""}")
                     pop()
                 }
-                append("$day ")
-                pushStyle(SpanStyle(fontWeight = FontWeight.Light, fontSize = 18.sp))
-                append("day${if (day > 1) "s" else ""}")
-                pop()
             },
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(horizontal = 30.dp),
@@ -124,14 +177,11 @@ fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, da
 
                         Box(modifier = Modifier.background(shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surface).height(60.dp), Alignment.Center){
-                            if (monthLeft != null) {
-                                if (dayLeft != null) {
-                                    RemainingTime(monthLeft, dayLeft)
-                                }
-                            }
+                            RemainingTime(months, days)
+
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("until next birthday", color = MaterialTheme.colorScheme.onSurface,
+                        Text("Next birthday", color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodyMedium)
 
@@ -159,7 +209,7 @@ fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, da
                                     Text("BIRTHDAY", color = Color(0xFFC408AB), style = MaterialTheme.typography.titleMedium)
                                 }
                                 Spacer(Modifier.height(8.dp))
-                                Text("$monthText $birthDay", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                                Text("$monthText $day", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                                 Text("$dayOfWeek", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                             }
                             Spacer(Modifier.width(24.dp))
@@ -192,14 +242,14 @@ fun FirstCard(monthLeft: Int?, dayLeft: Int?, birthMonth:Int?, birthDay:Int?, da
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.background(color = Color(0xFF8030DA).copy(alpha = 0.5f), shape = CircleShape).padding(4.dp)) {
-                                    Text(zodiacSigns[zodiacSign]?:"", style = MaterialTheme.typography.headlineMedium)
+                                    Text(zodiacSigns[zodiacSign]?: "Unknown", style = MaterialTheme.typography.headlineMedium)
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(zodiacSign ?: "Unknown", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
-                                    Text(zodiacTraits[zodiacSign]?: "", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                                    Text(zodiacSign, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                                    Text(zodiacTraits[zodiacSign]?: "Unknown", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                                 }
                                 Box(Modifier.border(width = 1.dp, shape = RoundedCornerShape(32.dp), color = Color(0xFF8030DA).copy(alpha = 0.2f)).padding(horizontal = 16.dp, vertical = 4.dp)){
-                                    Text("Fire Sign", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelMedium)
+                                    Text(zodiacElements[zodiacSign]?: "Unknown", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                         }

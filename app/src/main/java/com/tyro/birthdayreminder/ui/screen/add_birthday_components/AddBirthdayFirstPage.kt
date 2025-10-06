@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Person
@@ -107,7 +108,7 @@ fun AddBirthdayFirstPage(
             DatePickerModal(
                 onDateSelected = { millis ->
                     millis?.let {
-                        val formatter = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                         contactFormViewModel.onBirthDateChange(formatter.format(Date(it)))
                     }
                     showDatePicker = false
@@ -166,20 +167,20 @@ fun AddBirthdayFirstPage(
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
-                            IconButton(onClick = {
-                                pickImageLauncher.launch("image/*")
-                            },
+                            IconButton(
                                 modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .background(
-                                        color = MaterialTheme.colorScheme.primary.copy(0.5f),
-                                        shape = CircleShape
-                                    )
-                                ) {
+                                    .align(Alignment.BottomEnd),
+                                onClick = {
+                                    if(!photoOpened){
+                                        photoOpened = true
+                                        pickImageLauncher.launch("image/*")
+                                    }
+                                }) {
                                 Icon(
-                                    modifier = Modifier.fillMaxSize(),
-                                    painter = painterResource(id = R.drawable.baseline_camera_24),
-                                    contentDescription = "",
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .background(color = MaterialTheme.colorScheme.primary.copy(0.5f), shape = CircleShape).padding(6.dp),
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
@@ -231,25 +232,32 @@ fun AddBirthdayFirstPage(
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    Box(modifier = Modifier
-                        .clickable { showDatePicker = true }){
-                        TextField(modifier = Modifier
-                            .fillMaxWidth(),
-                            leadingIcon = { Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Birth Date",
-                                tint = MaterialTheme.colorScheme.primary) },
-                            value = formState.birthday,
-                            onValueChange = {},
-                            placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
-                            enabled = false,
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        )
+                    Row {
+                        Box(modifier = Modifier.weight(1f)
+                            .clickable { showDatePicker = true }){
+                            TextField(modifier = Modifier.fillMaxWidth(),
+                                leadingIcon = { Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Birth Date",
+                                    tint = MaterialTheme.colorScheme.primary) },
+                                value = formState.birthday,
+                                onValueChange = {},
+                                placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
+                                enabled = false,
+                                singleLine = true,
+                                colors = TextFieldDefaults.colors(
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            GenderDropdownMenu(
+                                selectedSex = formState.gender,
+                                onSexSelected = {contactFormViewModel.onGenderChange(it)},
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -345,5 +353,54 @@ fun AddBirthdayFirstPage(
                 }
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GenderDropdownMenu(
+    selectedSex: String,
+    onSexSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val options = listOf("Male", "Female", "Other")
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        TextField(
+            value = selectedSex,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Sex", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(0.dp),
+            modifier = Modifier.menuAnchor() // Required for dropdown positioning
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSexSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Card
@@ -23,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -31,11 +33,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -79,7 +88,7 @@ fun AddBirthdaySecondPage(
                     Text("Add their contact details to stay connected", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground)
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextFieldItem(fieldName = "Phone Number", fieldValue = formState.phoneNumber, onChange = {contactFormViewModel.onPhoneNumberChange(it)}, R.drawable.baseline_call_24)
+                    TextFieldItemNumber(fieldName = "Phone Number", fieldValue = formState.phoneNumber, onChange = {contactFormViewModel.onPhoneNumberChange(it)}, R.drawable.baseline_call_24)
                     Spacer(modifier = Modifier.height(16.dp))
                     TextFieldItem(fieldName = "Email Address", fieldValue = formState.email, onChange = {contactFormViewModel.onEmailChange(it)}, R.drawable.baseline_email_24)
                     Spacer(modifier = Modifier.height(16.dp))
@@ -98,13 +107,13 @@ fun AddBirthdaySecondPage(
                             modifier = Modifier.background(shape = CircleShape, color = Color.Yellow)
                                 .padding(4.dp)
 
-                            )
+                        )
                         Column {
                             Text("Stay Connected", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                             Text("Adding contact information helps you reach out easily on their special day. All fields are optional.",
                                 fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface,
                                 style = MaterialTheme.typography.labelMedium
-                                )
+                            )
                         }
                     }
 
@@ -134,27 +143,58 @@ fun TextFieldItem(fieldName: String, fieldValue: String, onChange: (String)-> Un
     )
 }
 
+@Composable
+fun TextFieldItemNumber(fieldName: String, fieldValue: String, onChange: (String)-> Unit, icon: Int ){
+    TextField(modifier = Modifier
+        .fillMaxWidth(),
+        leadingIcon = { Icon(painter = painterResource(id = icon), contentDescription = fieldName, tint = MaterialTheme.colorScheme.primary) },
+        value = fieldValue, onValueChange = {onChange(it.filter { c -> c.isDigit() }) },
+        label = { Text(fieldName, color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
+        singleLine = true,
+        visualTransformation = phoneNumberVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent
+        ),
+        shape = RoundedCornerShape(0.dp)
+    )
+}
 
-//@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-//@Composable
-//fun AddBirthdaySecondPagePreview(){
-//
-//    val phoneNumber = remember { mutableStateOf("") }
-//    val emailAddress = remember { mutableStateOf("") }
-//    val instagram = remember { mutableStateOf("") }
-//    val twitter = remember { mutableStateOf("") }
-//
-//    BirthdayReminderTheme {
-//        AddBirthdaySecondPage(
-//            innerPadding = PaddingValues(4.dp),
-//            phoneNumber = phoneNumber.value,
-//            onPhoneNumberChange = {phoneNumber.value = it},
-//            emailAddress = phoneNumber.value,
-//            onEmailAddressChange = {emailAddress.value = it},
-//            instagram = phoneNumber.value,
-//            onInstagramChange = {instagram.value = it},
-//            twitter = phoneNumber.value,
-//            onTwitterChange = {twitter.value = it},
-//        )
-//    }
-//}
+fun phoneNumberVisualTransformation(): VisualTransformation {
+    return VisualTransformation { text ->
+        val digits = text.text.filter { it.isDigit() }
+        val formatted = buildString {
+            for ((i, c) in digits.withIndex()) {
+                append(c)
+                if (i == 3 || i == 6) append(" ") // "080 123 4567" style
+            }
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                // Add a space after 3 and 6 digits
+                return when {
+                    offset <= 3 -> offset
+                    offset <= 6 -> offset + 1
+                    else -> offset + 2
+                }
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                // Reverse mapping
+                return when {
+                    offset <= 3 -> offset
+                    offset <= 7 -> offset - 1
+                    else -> offset - 2
+                }
+            }
+        }
+
+        TransformedText(AnnotatedString(formatted), offsetMapping)
+    }
+}

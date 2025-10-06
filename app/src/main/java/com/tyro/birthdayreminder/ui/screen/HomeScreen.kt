@@ -1,6 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -62,7 +65,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.auth.AuthState
 import com.tyro.birthdayreminder.auth.ContactOperationState
+import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.PullToRefreshCustomStyle
 import com.tyro.birthdayreminder.custom_class.connection_manager.ConnectivityObserver
@@ -75,6 +80,8 @@ import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.time.YearMonth
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -92,16 +99,19 @@ fun HomeScreen(
 
     val imageUrl by authViewModel.imageUrl.collectAsState()
     val fullName by authViewModel.fullName.collectAsState()
+    Log.d("Home Screen", fullName.toString())
 
     var greeting by remember { mutableStateOf("") }
 
-    authViewModel.saveFcmToken()
+    LaunchedEffect(fullName) {
+        authViewModel.fetchCurrentUser()
+    }
 
     LaunchedEffect(Unit) {
-        greeting = when(getTimeOfDay()){
-            "morning" -> "Good Morning!"
-            "afternoon" -> "Good Afternoon!"
-            else -> "Good Evening!"
+        when(getTimeOfDay()){
+            "morning" -> greeting = "Good Morning!"
+            "afternoon" -> greeting = "Good Afternoon!"
+            else -> greeting = "Good Evening!"
         }
     }
 
@@ -113,7 +123,7 @@ fun HomeScreen(
         TabItem("Contact", Icons.Outlined.AccountBox, ""),
         TabItem("Calendar", Icons.Outlined.DateRange, ""),
         TabItem("Profile", Icons.Outlined.Person, ""),
-        )
+    )
     val selectedIndex  = tabs.indexOfFirst { it.title == currentTab }
         .takeIf { it != -1 } ?: 0
 
@@ -129,7 +139,44 @@ fun HomeScreen(
         }
     }
 
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        birthdayContactViewModel.uiEvent.collect{event ->
+            when(event){
+                is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                is UiEvent.Navigate -> navController.navigate(event.route)
+                else -> Unit
+            }
+        }
+    }
+
+    val authState by authViewModel.authState.collectAsState()
+
+    LaunchedEffect(authState) {
+        when(authState){
+            is AuthState.LoggedOut -> navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Home.route) { inclusive = true }
+            }
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        launch {
+            authViewModel.uiEvent.collect{event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
                 expandedHeight = 70.dp,
@@ -164,7 +211,7 @@ fun HomeScreen(
                         Spacer(Modifier.width(8.dp))
                         Column {
                             Text(greeting, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                            Text(fullName ?: "Unknown", style = MaterialTheme.typography.titleLarge,
+                            Text(fullName?: "Unknown", style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Medium)
                             if(connectivity == ConnectivityObserver.Status.Unavailable || connectivity == ConnectivityObserver.Status.Lost ){
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -201,13 +248,13 @@ fun HomeScreen(
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.background,
                 modifier = Modifier.wrapContentHeight()
-                ){
+            ){
 
                 TabRow(selectedTabIndex = selectedIndex) {
                     tabs.forEachIndexed {
-                        index, tab ->
+                            index, tab ->
                         Tab(
-                         selected = selectedIndex == index,
+                            selected = selectedIndex == index,
                             onClick = {currentTab = tab.title},
                             text = { Text(tab.title) },
                             icon = {Icon(tab.icon, contentDescription = null)},
@@ -264,10 +311,11 @@ fun HomeScreen(
                         }
                 }
 
-                if (contactOperationState is ContactOperationState.Loading) {
+                if (contactOperationState is ContactOperationState.Loading || authState is AuthState.Loading) {
                     Loading(
                         retry = {
                             birthdayContactViewModel.loadContacts(showLoading = true)
+                            authViewModel.loadProfilePhoto()
                         }
                     )
                 }

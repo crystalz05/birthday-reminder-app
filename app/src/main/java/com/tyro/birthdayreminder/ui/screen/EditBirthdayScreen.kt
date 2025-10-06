@@ -223,30 +223,6 @@ fun EditBirthdayScreen(
                         Text("Save Changes")
                     }
                 }
-                Spacer(Modifier.height(8.dp))
-                Column(modifier = Modifier.fillMaxWidth().
-                background(color = MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp)),
-                    content = {
-                        Row(modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column(modifier = Modifier.fillMaxWidth(0.7f)) {
-                                Text("Delete Birthday")
-                                Text("Remove Sarah Johnson's birthday permanently",
-                                    style = MaterialTheme.typography.labelSmall
-                                    )
-                            }
-                            OutlinedButton(onClick = {}, shape = RoundedCornerShape(8.dp), border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.error),
-                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent, contentColor =  MaterialTheme.colorScheme.error)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Filled.Delete, contentDescription = null)
-                                    Text("Delete", maxLines = 1)
-                                }
-
-                            }
-                        }
-                    }
-                )
             }
         }
     ) {innerPadding ->
@@ -260,56 +236,59 @@ fun EditBirthdayScreen(
                 Loading()
             }
         }else{
-            Column(modifier = Modifier.padding(innerPadding)) {
-                Box(modifier = Modifier.fillMaxSize()){
-                    Card(modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
-                            contentColor = Color.White), shape = RoundedCornerShape(8.dp),
-                        content = {
-                            Box(modifier = Modifier.fillMaxWidth()
-                                .padding(16.dp), contentAlignment = Alignment.CenterStart
-                            ) {
-                                TabRow(selectedTabIndex = selectedIndex) {
-                                    tabs.forEachIndexed { index, (tabName, icon) ->
-                                        Tab(
-                                            selected = selectedIndex == index,
-                                            onClick = { currentTab = tabName },
-                                            text = { Text(tabName) },
-                                            icon = { Icon(icon, contentDescription = null) } // make dynamic
-                                        )
+            Box(){
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    Column(modifier = Modifier.fillMaxSize()){
+                        Card(modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
+                                contentColor = Color.White), shape = RoundedCornerShape(8.dp),
+                            content = {
+                                Box(modifier = Modifier.fillMaxWidth()
+                                    .padding(16.dp), contentAlignment = Alignment.CenterStart
+                                ) {
+                                    TabRow(selectedTabIndex = selectedIndex) {
+                                        tabs.forEachIndexed { index, (tabName, icon) ->
+                                            Tab(
+                                                selected = selectedIndex == index,
+                                                onClick = { currentTab = tabName },
+                                                text = { Text(tabName) },
+                                                icon = { Icon(icon, contentDescription = null) } // make dynamic
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
-                    )
-                    Card(modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = Color.White), shape = RoundedCornerShape(0.dp),
-                        content = {
-                            Box(modifier = Modifier.fillMaxWidth()
-                                .background(color = colorResource(id = R.color.orange))
-                                .padding(16.dp), contentAlignment = Alignment.CenterStart
-                            ) {
-                                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
-                                    Text("Currently editing - ${contact!!.fullName}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Medium)
+                        )
+                        Card(modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = Color.White), shape = RoundedCornerShape(0.dp),
+                            content = {
+                                Box(modifier = Modifier.fillMaxWidth()
+                                    .background(color = colorResource(id = R.color.orange))
+                                    .padding(16.dp), contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+                                        Text("Currently editing - ${contact!!.fullName}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Medium)
+                                    }
                                 }
                             }
+                        )
+
+                        if(currentTab == "Personal"){
+                            EditBirthdayFirstPage()
                         }
-                    )
-
-                    if(currentTab == "Personal"){
-                        EditBirthdayFirstPage()
+                        if(currentTab == "Contact"){
+                            EditBirthdaySecondPage()
+                        }
+                        if(currentTab == "Reminder"){
+                            EditBirthdayThirdPage()
+                        }
                     }
-                    if(currentTab == "Contact"){
-                        EditBirthdaySecondPage()
-                    }
-                    if(currentTab == "Reminder"){
-                        EditBirthdayThirdPage()
-                    }
-
+                }
+                Column {
                     if (contactOperationState is ContactOperationState.Loading) {
                         Loading()
                     }

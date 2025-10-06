@@ -23,12 +23,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.ContactActionMenu
+import com.tyro.birthdayreminder.custom_class.ProfileActionMenu
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 
@@ -45,6 +52,9 @@ fun ProfilePhotoSection(navHostController: NavHostController, authViewModel: Aut
     val fullName by authViewModel.fullName.collectAsState()
     val imageUrl by authViewModel.imageUrl.collectAsState()
     val email by authViewModel.email.collectAsState()
+    val haptic = LocalHapticFeedback.current
+
+    var showDialog by remember { mutableStateOf(false) }
 
 
     Card(modifier = Modifier.shadow(elevation = 0.dp, shape = RoundedCornerShape(6.dp), clip = false)
@@ -75,6 +85,17 @@ fun ProfilePhotoSection(navHostController: NavHostController, authViewModel: Aut
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
                         fontWeight = FontWeight.Normal)
+                }
+
+                Column(Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 16.dp)
+                ) {
+                    ProfileActionMenu(
+                        onRemovePhoto = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                    )
                 }
             }
         }

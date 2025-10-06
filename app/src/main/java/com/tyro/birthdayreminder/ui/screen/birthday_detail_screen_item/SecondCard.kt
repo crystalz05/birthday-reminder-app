@@ -1,8 +1,10 @@
 package com.tyro.birthdayreminder.ui.screen.birthday_detail_screen_item
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,14 +29,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.tyro.birthdayreminder.R
 
 @Composable
 fun SecondCard(phoneNumber: String?, email: String?, instagram: String?){
+
+    val context = LocalContext.current
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
         Card(modifier = Modifier.fillMaxWidth(),
@@ -61,11 +67,21 @@ fun SecondCard(phoneNumber: String?, email: String?, instagram: String?){
                         }
                         Spacer(Modifier.height(16.dp))
                         Row {
-                            MiniCardItem(Modifier.weight(1f), R.drawable.baseline_call_24,
+                            MiniCardItem(Modifier.weight(1f).clickable {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = "tel:$phoneNumber".toUri()
+                                }
+                                context.startActivity(intent)
+                            }, R.drawable.baseline_call_24,
                                 "Call", phoneNumber ?:"No value", Color(0xFF2B7C0E)
                             )
                             Spacer(Modifier.width(24.dp))
-                            MiniCardItem(Modifier.weight(1f), R.drawable.round_chat_24,
+                            MiniCardItem(Modifier.weight(1f).clickable {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = "smsto:$phoneNumber".toUri()
+                                }
+                                context.startActivity(intent)
+                            }, R.drawable.round_chat_24,
                                 "Message", phoneNumber ?:"No value", Color(0xFF125296)
                             )
                         }

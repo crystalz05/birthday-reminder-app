@@ -10,6 +10,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.imageLoader
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
@@ -28,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -60,7 +62,6 @@ class AuthViewModel @Inject constructor(
     init {
         fetchCurrentUser()
     }
-
     fun registerUser(fullName: String, email: String, password: String){
         _authState.update { AuthState.Loading }
 
@@ -81,6 +82,37 @@ class AuthViewModel @Inject constructor(
                 }
             }.onFailure { e ->
                 _authState.update { AuthState.Error(e.message ?: "Unknown error") }
+                _uiEvent.send(UiEvent.ShowSnackBar(e.message.toString()))
+            }
+        }
+    }
+
+    fun verifyUserAccount(password: String){
+        viewModelScope.launch {
+
+            val result = authRepository.verifyUserAccount(password)
+
+            result.onSuccess {
+                _uiEvent.send(UiEvent.ShowSnackBar("Verification Successful"))
+                _uiEvent.send(UiEvent.Navigate(Screen.ProfileEdit.route))
+            }.onFailure {e->
+                _uiEvent.send(UiEvent.ShowSnackBar(e.message.toString()))
+            }
+        }
+    }
+
+    fun deleteAccount(password: String, onSuccess: (()-> Unit)? = null){
+        viewModelScope.launch {
+            _authState.update { AuthState.Loading }
+            val result = authRepository.reAuthenticateAndDelete(password)
+
+            result.onSuccess {
+                clearUserData()
+                _authState.update { AuthState.LoggedOut }
+                _uiEvent.send(UiEvent.ShowSnackBar("Account deleted Successfully"))
+                onSuccess?.invoke()
+            }.onFailure { e->
+                _authState.update { AuthState.Error("Failed to delete account") }
                 _uiEvent.send(UiEvent.ShowSnackBar(e.message.toString()))
             }
         }
@@ -184,7 +216,10 @@ class AuthViewModel @Inject constructor(
                     mapOf("fullName" to newName, "updatedAt" to System.currentTimeMillis())
                 )
                 result.onSuccess {
+                    _fullName.update { newName } // ✅ immediate update
                     _uiEvent.send(UiEvent.ShowSnackBar("Name updated successfully"))
+                    _uiEvent.send(UiEvent.Navigate(Screen.Home.route))
+                    _authState.update { AuthState.Success(currentUser) }
                 }.onFailure { e ->
                     _uiEvent.send(UiEvent.ShowSnackBar("Update failed: ${e.message}"))
                 }
@@ -210,20 +245,22 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signOut(){
-        _authState.update { AuthState.Loading }
-        viewModelScope.launch {
-            authRepository.signOut()
-            _authState.update { AuthState.LoggedOut }
-            _uiEvent.send(UiEvent.Navigate(Screen.Login.route))
-            _uiEvent.send(UiEvent.ShowSnackBar("Signed out successfully"))
-        }
-    }
-
     fun saveFcmToken(){
         viewModelScope.launch {
             val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
             authRepository.getUid()?.let { authRepository.saveFcmToken(it, token) }
+        }
+    }
+
+    fun signOut(context: Context){
+        _authState.update { AuthState.Loading }
+        viewModelScope.launch {
+            authRepository.signOut()
+            clearUserData()
+            clearImageCache(context)
+            _authState.update { AuthState.LoggedOut }
+            _uiEvent.send(UiEvent.Navigate(Screen.Login.route))
+            _uiEvent.send(UiEvent.ShowSnackBar("Signed out successfully"))
         }
     }
 
@@ -242,7 +279,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun loadProfilePhoto(){
+    fun loadProfilePhoto(){
         val uid = authRepository.currentUser()?.uid ?: return
         viewModelScope.launch {
             val snapshot = authRepository.getUserData(uid)
@@ -264,5 +301,16 @@ class AuthViewModel @Inject constructor(
                 else -> AuthState.Unverified(user)
             }
         }
+    }
+
+    private fun clearUserData() {
+        _imageUrl.value = null
+        _fullName.value = null
+        _email.value = null
+    }
+
+    private fun clearImageCache(context: Context) {
+        context.imageLoader.memoryCache?.clear()
+        context.imageLoader.diskCache?.clear()
     }
 }

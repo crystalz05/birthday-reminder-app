@@ -21,6 +21,7 @@ playServicesAuth = "21.4.0"
 googleid = "1.1.1"
 storageKt = "2.4.0"
 supabaseKt = "2.4.0"
+generativeai = "0.9.0"
 
 
 [libraries]
@@ -60,6 +61,7 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 storage-kt = { module = "io.github.jan-tennert.supabase-kt:storage-kt", version.ref = "storageKt" }
 supabase-kt = { module = "io.github.jan-tennert.supabase-kt:supabase-kt", version.ref = "supabaseKt" }
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

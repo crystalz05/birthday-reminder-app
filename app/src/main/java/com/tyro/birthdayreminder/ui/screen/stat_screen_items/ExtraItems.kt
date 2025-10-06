@@ -1,5 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen.stat_screen_items
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,10 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.custom_class.getDaysLeft
+import com.tyro.birthdayreminder.custom_class.getDaysLeftActualNumbers
+import com.tyro.birthdayreminder.entity.Contact
 
 @Composable
 fun PercentageBarWithText(progress: Float) {
@@ -64,7 +70,7 @@ fun PercentageBarWithText(progress: Float) {
 }
 
 @Composable
-fun PercentageBar(progress: Float, relationship: String) {
+fun PercentageBar(progress: Float, relationship: String, count: Int) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -72,7 +78,7 @@ fun PercentageBar(progress: Float, relationship: String) {
                 Text(relationship, color = MaterialTheme.colorScheme.secondary)
             }
             Text(
-                text = "23 (${(progress * 100).toInt()}%)",
+                text = "$count (${(progress * 100).toInt()}%)",
                 color = MaterialTheme.colorScheme.secondary,
             )
         }
@@ -83,7 +89,6 @@ fun PercentageBar(progress: Float, relationship: String) {
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
         ) {
-            Text("Friends", color = MaterialTheme.colorScheme.primary)
             Box(
                 modifier = Modifier
                     .fillMaxWidth(progress)
@@ -95,8 +100,19 @@ fun PercentageBar(progress: Float, relationship: String) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun UpcomingBirthdayItem(){
+fun UpcomingBirthdayItem(contact: Contact){
+
+    val (months, days) = getDaysLeft(contact.birthday)
+
+    val daysLeftString = when {
+        months == 0 && days == 0 -> "Today"
+        months == 0 && days == 1 -> "Tomorrow"
+        months == 0 -> "In $days day${if (days != 1) "s" else ""}"
+        else -> "In $months month${if (months != 1) "s" else ""} $days day${if (days != 1) "s" else ""}"
+    }
+
     Column(modifier = Modifier
         .background(color = colorResource(id = R.color.teal_200).copy(0.1f), shape = RoundedCornerShape(8.dp))
         .border(width = 1.dp, color = colorResource(id = R.color.teal_200).copy(0.5f), shape = RoundedCornerShape(8.dp))
@@ -104,27 +120,27 @@ fun UpcomingBirthdayItem(){
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Column() {
-                Text("Emma Wilson", style = MaterialTheme.typography.titleMedium)
-                Text("Tomorrow", style = MaterialTheme.typography.titleSmall)
+                Text(contact.fullName, style = MaterialTheme.typography.titleMedium)
+                contact.relationship?.let { Text("Relationship: $it", style = MaterialTheme.typography.titleSmall, fontStyle = FontStyle.Italic) }
             }
             Column(modifier = Modifier
                 .background(color = colorResource(id = R.color.orange).copy(0.2f), shape = RoundedCornerShape(24.dp))
                 .border(width = 1.dp, color = colorResource(id = R.color.orange).copy(0.8f), shape = RoundedCornerShape(24.dp))
                 .padding(10.dp, 3.dp)
             ) {
-                Text("Tomorrow", style = MaterialTheme.typography.labelLarge, color = colorResource(id = R.color.deep_orange))
+                Text(daysLeftString, style = MaterialTheme.typography.labelLarge, color = colorResource(id = R.color.deep_orange))
             }
         }
     }
 }
 
 @Composable
-fun PercentageBarWithTextForAgeDistribution(progress: Float) {
+fun PercentageBarWithTextForAgeDistribution(progress: Float, group: String, count: Int) {
     Row {
-        Text("16-25", modifier = Modifier.width(50.dp), color = MaterialTheme.colorScheme.onBackground)
+        Text(group, modifier = Modifier.width(50.dp).weight(0.2f), color = MaterialTheme.colorScheme.onBackground)
         Box(
             modifier = Modifier
-                .weight(1f)
+                .weight(0.7f)
                 .height(24.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
@@ -154,6 +170,6 @@ fun PercentageBarWithTextForAgeDistribution(progress: Float) {
                 )
             }
         }
-        Text("18%", modifier = Modifier.width(50.dp), textAlign = TextAlign.Right, color = MaterialTheme.colorScheme.onBackground)
+        Text("$count", modifier = Modifier.width(50.dp).weight(0.1f), textAlign = TextAlign.Right, color = MaterialTheme.colorScheme.onBackground)
     }
 }

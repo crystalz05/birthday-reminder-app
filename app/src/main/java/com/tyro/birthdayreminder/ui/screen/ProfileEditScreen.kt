@@ -40,6 +40,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -47,6 +49,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,22 +68,64 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.auth.UiEvent
+import com.tyro.birthdayreminder.entity.objects.SignupFormState
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAboutSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAppearanceSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileNotificationSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePhotoSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
+import com.tyro.birthdayreminder.view_model.AuthViewModel
+import com.tyro.birthdayreminder.view_model.SignupFormViewModel
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileEditScreen(navHostController: NavHostController) {
+fun ProfileEditScreen(
+    navHostController: NavHostController,
+    signupFormViewModel: SignupFormViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
 
-    var password by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    val fullName by authViewModel.fullName.collectAsState()
+
+    val formState by signupFormViewModel.formState.collectAsState()
+
+    signupFormViewModel.onFullNameChange(fullName?: "")
+
+    LaunchedEffect(Unit) {
+        launch {
+            signupFormViewModel.uiEvent.collect{event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    else -> Unit
+                }
+            }
+        }
+        launch {
+            authViewModel.uiEvent.collect{ event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    is UiEvent.Navigate -> navHostController.navigate(event.route)
+                    else -> Unit
+                }
+
+            }
+        }
+    }
 
     Scaffold(
+
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+
         topBar = {
             Box(
                 modifier = Modifier
@@ -124,13 +171,6 @@ fun ProfileEditScreen(navHostController: NavHostController) {
         LazyColumn(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
             item {
 
-                var fullname by remember { mutableStateOf("") }
-                var email by remember { mutableStateOf("") }
-                var password by remember { mutableStateOf("") }
-                var confirmPassword by remember { mutableStateOf("") }
-                var showPassword by rememberSaveable { mutableStateOf(false) }
-                var changePasswordCheck by remember { mutableStateOf(false) }
-
                 Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
                     Box(modifier = Modifier.fillMaxSize(), Alignment.Center) {
                         Column(
@@ -146,13 +186,17 @@ fun ProfileEditScreen(navHostController: NavHostController) {
 
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedTextField(modifier = Modifier.fillMaxWidth(),
-                                    value = fullname,
-                                    onValueChange = {fullname = it},
+                                    value = formState.fullName,
+                                    onValueChange = {signupFormViewModel.onFullNameChange(it)},
+                                    singleLine = true,
                                     placeholder = { Text("Enter new name")},
                                     leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = "") },
                                 )
 
-                                Button(onClick = {}, modifier = Modifier.fillMaxWidth(),
+                                Button(onClick = {
+                                    authViewModel.updateUserFullName(formState.fullName)
+                                    focusManager.clearFocus()
+                                }, modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16))
                                 {
                                     Text("Update Data")

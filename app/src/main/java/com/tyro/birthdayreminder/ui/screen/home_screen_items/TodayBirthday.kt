@@ -1,6 +1,8 @@
 package com.tyro.birthdayreminder.ui.screen.home_screen_items
 
 import android.content.ClipData.Item
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -45,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,12 +57,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
-import com.tyro.birthdayreminder.custom_class.getDayOfYMonth
+import com.tyro.birthdayreminder.custom_class.getDayOfMonth
 import com.tyro.birthdayreminder.custom_class.getMonth
 import com.tyro.birthdayreminder.custom_class.getYear
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import java.time.LocalDate
+import androidx.core.net.toUri
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -70,9 +74,11 @@ fun TodayBirthday(
     birthdayContactViewModel: BirthdayContactViewModel
 ){
 
+    val context = LocalContext.current
+
     val contacts by birthdayContactViewModel.contacts.collectAsState()
     val todayBirthDay = contacts.filter { contact -> getMonth(contact.birthday) == LocalDate.now().monthValue
-            && getDayOfYMonth(contact.birthday) == LocalDate.now().dayOfMonth }
+            && getDayOfMonth(contact.birthday) == LocalDate.now().dayOfMonth }
 
     val todayBirthdayCount = todayBirthDay.size
 
@@ -174,17 +180,28 @@ fun TodayBirthday(
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Button(modifier = Modifier.weight(1f), onClick = {}, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
+                            Button(modifier = Modifier.weight(1f), onClick = {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = "smsto:${contact.phoneNumber}".toUri()
+                                    putExtra("sms_body", "Hello! Happy Birthday ${contact.fullName}")
+                                }
+                                context.startActivity(intent)
+                            }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Icon(painterResource(id = R.drawable.round_chat_24), contentDescription = "", tint = Color.White)
-                                    Text("Message",color = Color.White,)
+                                    Text("Message", color = Color.White)
                                 }
                             }
                             Spacer(Modifier.width(16.dp))
-                            Button(modifier = Modifier.weight(1f), onClick = {}, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
+                            Button(modifier = Modifier.weight(1f), onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = "tel:${contact.phoneNumber}".toUri()
+                                }
+                                context.startActivity(intent)
+                            }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Outlined.Phone, contentDescription = "", tint = Color.White)
-                                    Text("Call",color = Color.White,)
+                                    Text("Call", color = Color.White)
                                 }
                             }
 

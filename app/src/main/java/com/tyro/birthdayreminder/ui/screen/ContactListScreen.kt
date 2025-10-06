@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,6 +41,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,7 +59,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
+import com.tyro.birthdayreminder.auth.ContactOperationState
+import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.getDayOfYear
+import com.tyro.birthdayreminder.custom_class.getDaysLeft
+import com.tyro.birthdayreminder.custom_class.getDaysLeftActualNumbers
 import com.tyro.birthdayreminder.custom_class.getMonth
 import com.tyro.birthdayreminder.custom_class.getMonthAndDay
 import com.tyro.birthdayreminder.custom_class.getYear
@@ -80,6 +86,8 @@ fun ContactListScreen(
     birthdayContactViewModel: BirthdayContactViewModel
 ) {
 
+    val contactOperationState by birthdayContactViewModel.contactOperationState.collectAsState()
+
     val title: String = when(listType){
         "all_contacts" -> "All Contacts"
         "this_month" -> "This Month"
@@ -87,6 +95,10 @@ fun ContactListScreen(
     }
 
     val contacts by birthdayContactViewModel.contacts.collectAsState()
+
+    LaunchedEffect(Unit) {
+        birthdayContactViewModel.loadContacts()
+    }
 
     val currentList: List<Contact> =
         if (listType == "this_month") {
@@ -123,11 +135,10 @@ fun ContactListScreen(
         }
 
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
+        Box(modifier = Modifier.padding(innerPadding)) {
             Card(modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
-                    contentColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    contentColor = Color.White)
             ){
                 Column(modifier = Modifier
                     .fillMaxSize()
@@ -138,70 +149,88 @@ fun ContactListScreen(
                             style = MaterialTheme.typography.titleLarge)
                     }
                     Spacer(Modifier.height(24.dp))
+                    LazyColumn {
+                        items(currentList) { contact ->
+                            val (month, day) = getMonthAndDay(contact.birthday)
 
-                    currentList.forEach { contact ->
-                        val (month, day) = getMonthAndDay(contact.birthday)
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = ripple(
-                                        color = Color.Black.copy(alpha = 0.2f),
-                                        bounded = true
-                                    )
-                                ) {
-                                    navHostController.navigate(
-                                        Screen.BirthDayDetail.passContactId(
-                                            contact.id
+                            val (months, days) = getDaysLeft(contact.birthday)
+
+                            val daysLeftString = when {
+                                months == 0 && days == 0 -> "Today"
+                                months == 0 && days == 1 -> "Tomorrow"
+                                months == 0 -> "In $days day${if (days != 1) "s" else ""}"
+                                else -> "In $months month${if (months != 1) "s" else ""} $days day${if (days != 1) "s" else ""}"
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = ripple(
+                                            color = Color.Black.copy(alpha = 0.2f),
+                                            bounded = true
                                         )
-                                    )
-                                }
-                                .padding(vertical = 24.dp)) {
-                            Box(modifier = Modifier
-                                .background(color = Color.Gray, shape = CircleShape)
-                                .size(50.dp), Alignment.Center){
+                                    ) {
+                                        navHostController.navigate(
+                                            Screen.BirthDayDetail.passContactId(
+                                                contact.id
+                                            )
+                                        )
+                                    }
+                                    .padding(vertical = 24.dp)) {
+                                Box(modifier = Modifier
+                                    .background(color = Color.Gray, shape = CircleShape)
+                                    .size(50.dp), Alignment.Center){
 
-                                AsyncImage(
-                                    model = contact.photo,
-                                    contentDescription = "Profile Photo",
-                                    contentScale = ContentScale.Crop,
-                                    placeholder = painterResource(id = R.drawable.baseline_person_24),
-                                    error = painterResource(id = R.drawable.baseline_person_24),
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .size(100.dp)
-                                )
-                            }
-                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column {
-                                    Text(contact.fullName, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
-                                    Text("Turning ${currentYear-getYear(contact.birthday)}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        titleCase("${Month(month)} $day"), modifier = Modifier
-                                            .border(
-                                                border = BorderStroke(
-                                                    1.dp,
-                                                    color = MaterialTheme.colorScheme.primary.copy(
-                                                        alpha = 0.6f
-                                                    )
-                                                ), shape = RoundedCornerShape(10.dp)
-                                            )
-                                            .background(
-                                                shape = RoundedCornerShape(10.dp),
-                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                            )
-                                            .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Light
+                                    AsyncImage(
+                                        model = contact.photo,
+                                        contentDescription = "Profile Photo",
+                                        contentScale = ContentScale.Crop,
+                                        placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                        error = painterResource(id = R.drawable.baseline_person_24),
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .size(100.dp)
                                     )
-                                    Text("In ${daysLeft(contact.birthday)} days", modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
+                                }
+                                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column {
+                                        Text(contact.fullName, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
+                                        Text("Turning ${currentYear-getYear(contact.birthday)}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            titleCase("${Month(month)} $day"), style = MaterialTheme.typography.titleMedium, modifier = Modifier
+                                                .border(
+                                                    border = BorderStroke(
+                                                        1.dp,
+                                                        color = MaterialTheme.colorScheme.primary.copy(
+                                                            alpha = 0.6f
+                                                        )
+                                                    ), shape = RoundedCornerShape(10.dp)
+                                                )
+                                                .background(
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Light
+                                        )
+                                        Text(daysLeftString, modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
+                                    }
                                 }
                             }
+                            HorizontalDivider(thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
                         }
-                        HorizontalDivider(thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
                     }
                 }
+            }
+            if (contactOperationState is ContactOperationState.Loading) {
+                Loading(
+                    retry = {
+                        birthdayContactViewModel.loadContacts(showLoading = true)
+                    }
+                )
             }
         }
 

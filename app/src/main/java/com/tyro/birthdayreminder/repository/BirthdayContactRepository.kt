@@ -12,10 +12,21 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
+import io.ktor.client.HttpClient
+import io.ktor.client.request.post
+import io.ktor.client.statement.HttpResponse
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 import javax.inject.Inject
+
+import com.tyro.birthdayreminder.BuildConfig
+import com.tyro.birthdayreminder.entity.WishItem
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 
 class BirthdayContactRepository @Inject constructor(
     private val auth: FirebaseAuth,
@@ -34,6 +45,7 @@ class BirthdayContactRepository @Inject constructor(
                 id = contactId,
                 userId = uid,
                 fullName = form.fullName,
+                gender = form.gender,
                 photo = photoUrl,
                 birthday = form.birthday,
                 relationship = form.relationship.ifBlank { null },
@@ -57,7 +69,6 @@ class BirthdayContactRepository @Inject constructor(
         }
     }
 
-
     suspend fun updateContact(contactId: String, form: ContactFormState): Result<Contact> {
         return try {
             val uid = auth.currentUser?.uid ?: throw Exception("Not Logged in")
@@ -74,6 +85,7 @@ class BirthdayContactRepository @Inject constructor(
             val updates = existing.copy(
                 fullName = form.fullName,
                 birthday = form.birthday,
+                gender = form.gender,
                 relationship = form.relationship.ifBlank { null },
                 personalNote = form.personalNote.ifBlank { null },
                 phoneNumber = form.phoneNumber,
@@ -81,7 +93,8 @@ class BirthdayContactRepository @Inject constructor(
                 instagram = form.instagram.ifBlank { null },
                 twitter = form.twitter.ifBlank { null },
                 reminders = form.reminders,
-                // only overwrite photo if a new one exists
+                wishList = form.wishList,
+                journal = form.journal.ifBlank { null },
                 photo = photoUrl ?: existing.photo
             )
 
@@ -147,6 +160,21 @@ class BirthdayContactRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteAllContact(): Result<List<Contact>>{
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Not Logged in")
+
+            val deleted = supabase.from("contacts")
+                .delete {
+                    filter { eq("userId", uid) }
+                    select() }
+                .decodeList<Contact>()
+            Result.success(deleted)
+        }catch (e: Exception){
+            Result.failure(e)
+        }
+    }
+
     suspend fun uploadContactPhoto(uid: String, contactId: String, photo: ContactPhoto): Result<String>{
         return try{
             when (photo) {
@@ -168,4 +196,39 @@ class BirthdayContactRepository @Inject constructor(
         }
     }
 
+    suspend fun updateContactWishList(contactId: String, newWishList: List<WishItem>): Result<Contact> {
+        return try {
+            val uid = auth.currentUser?.uid ?: throw Exception("Not Logged in")
+
+            // Fetch the existing contact
+            val existing = supabase
+                .from("contacts")
+                .select {
+                    filter { eq("id", contactId); eq("userId", uid) }
+                }
+                .decodeSingle<Contact>()
+
+            // Create an updated copy with new wishList
+            val updated = existing.copy(
+                wishList = newWishList
+            )
+
+            // Update in Supabase
+            val result = supabase
+                .from("contacts")
+                .update(updated) {
+                    filter {
+                        eq("id", contactId)
+                        eq("userId", uid)
+                    }
+                    select()
+                }
+                .decodeSingle<Contact>()
+
+            Result.success(result)
+        } catch (e: Exception) {
+            Log.e("updateContactWishList", "Failed to update wishList: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
 }

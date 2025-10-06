@@ -1,11 +1,14 @@
 package com.tyro.birthdayreminder.view_model
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tyro.birthdayreminder.auth.AuthState
 import com.tyro.birthdayreminder.auth.ContactOperationState
 import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.entity.Contact
+import com.tyro.birthdayreminder.entity.WishItem
 import com.tyro.birthdayreminder.entity.objects.ContactFormState
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.repository.BirthdayContactRepository
@@ -30,6 +33,9 @@ class BirthdayContactViewModel @Inject constructor(
 
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
     val contacts: StateFlow<List<Contact>> = _contacts
+
+    private val _giftItems = MutableStateFlow<List<WishItem>>(emptyList())
+    val giftItems: StateFlow<List<WishItem>> = _giftItems
 
     private val _contactsDetail = MutableStateFlow<Contact?>(null)
     val contactDetail: StateFlow<Contact?> = _contactsDetail
@@ -71,8 +77,8 @@ class BirthdayContactViewModel @Inject constructor(
             result.onSuccess { contact ->
                 _isRefreshing.value = false
                 _contactsDetail.update { contact }
-                _contactOperationState.update { ContactOperationState.Success(contacts) }
-
+                _giftItems.value = contact.wishList!!
+                _contactOperationState.update { ContactOperationState.Success(contact) }
             }.onFailure {
                 _isRefreshing.value = false
                 _uiEvent.send(UiEvent.ShowSnackBar("Failed to load Contact"))
@@ -108,8 +114,8 @@ class BirthdayContactViewModel @Inject constructor(
             val result = birthdayContactRepository.deleteContact(contactId)
 
             result.onSuccess { contact ->
+                _uiEvent.send(UiEvent.NavigateBack)
                 _uiEvent.send(UiEvent.ShowSnackBar("${contact.fullName} deleted"))
-                _uiEvent.send(UiEvent.Navigate(Screen.Home.route))
                 _contactOperationState.update { ContactOperationState.Success(contact) }
             }.onFailure { e->
                 _contactOperationState.update { ContactOperationState.Error(e.message ?: "Error deleting contact") }
@@ -117,20 +123,37 @@ class BirthdayContactViewModel @Inject constructor(
         }
     }
 
-    fun updateContact(contactId: String, contact: ContactFormState){
+    fun deleteAllContacts(){
         viewModelScope.launch {
-            _contactOperationState.update { ContactOperationState.Loading }
+            birthdayContactRepository.deleteAllContact()
+        }
+    }
+
+    fun updateContact(contactId: String, contact: ContactFormState, softSave: Boolean = false){
+        viewModelScope.launch {
+            if(!softSave)_contactOperationState.update { ContactOperationState.Loading }
 
             val result = birthdayContactRepository.updateContact(contactId, contact)
 
             result.onSuccess { contact ->
-                _uiEvent.send(UiEvent.ShowSnackBar("Birthday Contact Updated"))
-                _uiEvent.send(UiEvent.Navigate(Screen.BirthDayDetail.passContactId(contact.id)))
+                _contactsDetail.update { contact }
+                if(!softSave)_uiEvent.send(UiEvent.ShowSnackBar("Birthday Contact Updated"))
+                if(!softSave)_uiEvent.send(UiEvent.Navigate(Screen.BirthDayDetail.passContactId(contact.id)))
                 _contactOperationState.update { ContactOperationState.Success(contact) }
             }.onFailure { e->
                 _contactOperationState.update { ContactOperationState.Error(e.message ?: "Error saving contact") }
             }
         }
+    }
+
+    fun updateWishList(contactId: String, newWishList: List<WishItem>) {
+        viewModelScope.launch {
+            birthdayContactRepository.updateContactWishList(contactId, newWishList)
+        }
+    }
+
+    fun setGiftItems(items: List<WishItem>) {
+        _giftItems.value = items
     }
 
 }

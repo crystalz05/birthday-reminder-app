@@ -50,6 +50,8 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.custom_class.getDayOfYear
+import com.tyro.birthdayreminder.custom_class.getDaysLeft
+import com.tyro.birthdayreminder.custom_class.getDaysLeftActualNumbers
 import com.tyro.birthdayreminder.custom_class.getMonthAndDay
 import com.tyro.birthdayreminder.custom_class.getYear
 import com.tyro.birthdayreminder.custom_class.titleCase
@@ -88,6 +90,16 @@ fun UpComingBirthdays(
             Spacer(Modifier.height(24.dp))
 
             upComingContacts.forEach { contact ->
+
+                val (months, days) = getDaysLeft(contact.birthday)
+
+                val daysLeftString = when {
+                    months == 0 && days == 0 -> "Today"
+                    months == 0 && days == 1 -> "Tomorrow"
+                    months == 0 -> "In $days day${if (days != 1) "s" else ""}"
+                    else -> "In $months month${if (months != 1) "s" else ""} $days day${if (days != 1) "s" else ""}"
+                }
+
                 val (month, day) = getMonthAndDay(contact.birthday)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable(
@@ -121,7 +133,7 @@ fun UpComingBirthdays(
                                 .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Light
                             )
-                            Text("In ${daysLeft(contact.birthday)} days", modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
+                            Text(daysLeftString, modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
                         }
                     }
                 }

@@ -25,13 +25,13 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
 import com.tyro.birthdayreminder.BuildConfig
 import com.tyro.birthdayreminder.custom_class.compressBitmap
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.request.UpsertRequestBuilder
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
 import java.io.ByteArrayOutputStream
@@ -66,6 +66,19 @@ class AuthRepository @Inject constructor(
             Result.success(firebaseUser)
 
         }catch (e: Exception){
+            Result.failure(Exception(mapAuthError(e)))
+        }
+    }
+
+    suspend fun verifyUserAccount(password: String): Result<Boolean> {
+        return try {
+            val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
+            val credential = user.email?.let {
+                EmailAuthProvider.getCredential(it, password)
+            }
+            credential?.let { credentialValue-> user.reauthenticate(credentialValue).await() }
+            Result.success(true)
+        } catch (e: Exception) {
             Result.failure(Exception(mapAuthError(e)))
         }
     }
@@ -108,10 +121,13 @@ class AuthRepository @Inject constructor(
             val authResult = auth.signInWithCredential(firebaseCredential).await()
             val user = authResult.user
 
+            val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+            if (user != null) {
+                saveFcmToken(user.uid, token)
+            }
+
             if (user != null) {
                 if (user.isEmailVerified) {
-                    val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
-                    saveFcmToken(user.uid, token)
                     LoginResult.Verified(user)
                 } else {
                     LoginResult.Unverified(user)
@@ -189,6 +205,44 @@ class AuthRepository @Inject constructor(
         return auth.uid
     }
 
+//    suspend fun deleteAccount(): Result<Boolean>{
+//        return try{
+//            val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
+//
+//            fireStore.collection("users")
+//                .document(user.uid)
+//                .delete().await()
+//
+//            user.delete().await()
+//
+//            Result.success(true)
+//        }catch (e: Exception){
+//            Log.d("error", e.toString())
+//            Result.failure(Exception(mapAuthError(e)))
+//        }
+//    }
+
+    suspend fun reAuthenticateAndDelete(password: String): Result<Boolean> {
+        return try {
+            val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
+
+            // Create credential
+            val credential = user.email?.let { EmailAuthProvider.getCredential(it, password) }
+
+            // Reauthenticate
+            if (credential != null) {
+                user.reauthenticate(credential).await()
+            }
+
+            // Delete after reauth
+            user.delete().await()
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun currentUser(): FirebaseUser? = auth.currentUser
 
     suspend fun getUserData(uid: String): DocumentSnapshot{
@@ -207,6 +261,5 @@ private fun mapAuthError(e: Exception): String{
         else -> "Authentication Failed. Please try again."
     }
 }
-
 
 private val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -38,7 +39,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -57,14 +61,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
+import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAboutSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAppearanceSection
@@ -74,6 +83,7 @@ import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.Pr
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.LoginFormViewModel
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,9 +93,12 @@ fun AccountVerificationScreen(
     authViewModel: AuthViewModel,
     loginFormViewModel: LoginFormViewModel = hiltViewModel()
 ) {
+
+    val focusManager = LocalFocusManager.current
+
     val imageUrl by authViewModel.imageUrl.collectAsState()
 
-    var password by remember { mutableStateOf("") }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val fullName by authViewModel.fullName.collectAsState()
     val email by authViewModel.email.collectAsState()
@@ -96,7 +109,29 @@ fun AccountVerificationScreen(
         email?.let { loginFormViewModel.onEmailChange(it) }
     }
 
+    LaunchedEffect(Unit) {
+        launch {
+            loginFormViewModel.uiEvent.collect{event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    else -> Unit
+                }
+            }
+        }
+        launch {
+            authViewModel.uiEvent.collect{ event ->
+                when(event){
+                    is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
+                    is UiEvent.Navigate -> navHostController.navigate(event.route)
+                    else -> Unit
+                }
+
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -187,24 +222,27 @@ fun AccountVerificationScreen(
                 Spacer(Modifier.height(16.dp))
                 Text(modifier = Modifier.fillMaxWidth(), text = "Enter your password to verify it's your account", textAlign = TextAlign.Center)
                 Spacer(Modifier.height(16.dp))
-                TextField(modifier = Modifier
-                    .fillMaxWidth(),
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Lock, tint = MaterialTheme.colorScheme.primary, contentDescription = "Relationship") },
-                    value = formState.password, onValueChange = {loginFormViewModel.onPasswordChange(it)},
-                    label = { Text("Password", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
+                OutlinedTextField(modifier = Modifier.fillMaxWidth(),
+                    value = formState.password,
+                    visualTransformation = if(formState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    onValueChange = {loginFormViewModel.onPasswordChange(it)},
+                    placeholder = { Text("Enter your password")},
                     singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(0.dp)
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None),
+                    leadingIcon = { Icon(Icons.Outlined.Lock, contentDescription = "") },
+                    trailingIcon = {
+                        IconButton(onClick = {loginFormViewModel.togglePasswordVisibility()}) {
+                            Icon(painter = painterResource(id = if(formState.isPasswordVisible) R.drawable.baseline_visibility_off_24 else R.drawable.baseline_visibility_24),
+                                contentDescription = "")
+                        }
+                    }
                 )
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = {navHostController.navigate(Screen.ProfileEdit.route)},
+                Button(onClick = {
+                    authViewModel.verifyUserAccount(formState.password)
+                    focusManager.clearFocus()
+//                    navHostController.navigate(Screen.ProfileEdit.route)
+                                 },
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(color = Color.Transparent),

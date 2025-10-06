@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.entity.Contact
+import com.tyro.birthdayreminder.entity.WishItem
 import com.tyro.birthdayreminder.entity.objects.ContactFormState
 import com.tyro.birthdayreminder.entity.objects.ContactPhoto
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,11 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
     val uiEvent = _uiEvent.receiveAsFlow()
 
     fun fullNameChange(newName: String){
-       _formState.update { it.copy(fullName = newName, fullNameError = null) }
+        _formState.update { it.copy(fullName = newName, fullNameError = null) }
+    }
+
+    fun onGenderChange(newGender: String){
+        _formState.update { it.copy(gender = newGender, genderError = null) }
     }
 
     fun onBirthDateChange(newBirthDate: String){
@@ -63,6 +68,10 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
 
     fun setPhotoUrl(photo: Bitmap) {
         _formState.update { it.copy(photo = ContactPhoto.Local(photo)) }
+    }
+
+    fun onJournalChange(newJournal: String){
+        _formState.update { it.copy(journal = newJournal) }
     }
 
     fun on2WeeksToggled(){
@@ -116,19 +125,45 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
     fun setFromContact(contact: Contact) {
         _formState.update {
             it.copy(
-                fullName = contact.fullName ?: "",
+                fullName = contact.fullName,
+                gender = contact.gender ?: "",
                 photo = contact.photo?.let { url -> ContactPhoto.Remote(url) },
-                birthday = contact.birthday ?: "",
+                birthday = contact.birthday,
                 relationship = contact.relationship ?: "",
                 personalNote = contact.personalNote ?: "",
-                phoneNumber = contact.phoneNumber ?: "",
+                phoneNumber = contact.phoneNumber,
                 email = contact.email ?: "",
                 instagram = contact.instagram ?: "",
                 twitter = contact.twitter ?: "",
-                reminders = contact.reminders ?: emptyList()
+                reminders = contact.reminders,
+                journal = contact.journal ?: "",
+                wishList = contact.wishList ?: emptyList()
             )
         }
     }
+
+    fun toggleWishItem(index: Int): List<WishItem> {
+        var updated: List<WishItem> = emptyList()
+        _formState.update { state ->
+            updated = state.wishList.mapIndexed { i, item ->
+                if (i == index) item.copy(selected = !item.selected) else item
+            }
+            state.copy(wishList = updated)
+        }
+        return updated
+    }
+
+//    fun on2WeeksToggled(){
+//        _formState.update { state ->
+//            val updateReminders = state.reminders.toMutableList()
+//            if("2w" in updateReminders){
+//                updateReminders.remove("2w")
+//            }else{
+//                updateReminders.add("2w")
+//            }
+//            state.copy(reminders = updateReminders)
+//        }
+//    }
 
     fun validateForm(): Boolean{
         var isValid = true
@@ -137,11 +172,17 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
             var fullNameError: String? = null
             var birthDateError: String? = null
             var phoneNumberError: String? = null
+            var genderError: String? = null
 
             if(state.fullName.isBlank()){
                 fullNameError = "Name cannot be empty"
                 isValid =  false
                 sendUiEvent(UiEvent.ShowSnackBar(fullNameError))
+            }
+            if(state.gender.isBlank()){
+                genderError = "Gender required"
+                isValid = false
+                sendUiEvent(UiEvent.ShowSnackBar(genderError))
             }
             if(state.birthday.isBlank()){
                 birthDateError = "Birth date cannot be empty"
@@ -164,7 +205,7 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
                 isValid = false
                 sendUiEvent(UiEvent.ShowSnackBar(phoneNumberError))
             }
-            state.copy(fullNameError = fullNameError, birthDateError = birthDateError, phoneNumberError = phoneNumberError)
+            state.copy(fullNameError = fullNameError, birthDateError = birthDateError, phoneNumberError = phoneNumberError, genderError = genderError)
         }
         return isValid
     }
@@ -174,4 +215,3 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
         }
     }
 }
-

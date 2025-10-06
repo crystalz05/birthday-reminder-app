@@ -79,9 +79,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import android.util.Log
-
-
-
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.tyro.birthdayreminder.ui.screen.add_birthday_components.GenderDropdownMenu
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -120,7 +120,7 @@ fun EditBirthdayFirstPage(
             DatePickerModal(
                 onDateSelected = { millis ->
                     millis?.let {
-                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                         contactFormViewModel.onBirthDateChange(formatter.format(Date(it)))
                     }
                     showDatePicker = false
@@ -227,6 +227,7 @@ fun EditBirthdayFirstPage(
                             Spacer(modifier = Modifier.height(8.dp))
                             TextField(modifier = Modifier
                                 .fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                                 leadingIcon = { Icon(painter = painterResource(id = R.drawable.outline_person_heart_24), tint = MaterialTheme.colorScheme.primary, contentDescription = "Relationship") },
                                 value = formState.fullName, onValueChange = {contactFormViewModel.fullNameChange(it)},
                                 label = { Text("Full Name", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
@@ -243,25 +244,32 @@ fun EditBirthdayFirstPage(
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
-                            Box(modifier = Modifier
-                                .clickable { showDatePicker = true }){
-                                TextField(modifier = Modifier
-                                    .fillMaxWidth(),
-                                    leadingIcon = { Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Birth Date",
-                                        tint = MaterialTheme.colorScheme.primary) },
-                                    value = formState.birthday,
-                                    onValueChange = {},
-                                    placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
-                                    enabled = false,
-                                    singleLine = true,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent,
-                                        disabledContainerColor = Color.Transparent
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
+                            Row {
+                                Box(modifier = Modifier.weight(1f)
+                                    .clickable { showDatePicker = true }){
+                                    TextField(modifier = Modifier.fillMaxWidth(),
+                                        leadingIcon = { Icon(imageVector = Icons.Outlined.DateRange, contentDescription = "Birth Date",
+                                            tint = MaterialTheme.colorScheme.primary) },
+                                        value = formState.birthday,
+                                        onValueChange = {},
+                                        placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
+                                        enabled = false,
+                                        singleLine = true,
+                                        colors = TextFieldDefaults.colors(
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                            disabledContainerColor = Color.Transparent
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    GenderDropdownMenu(
+                                        selectedSex = formState.gender,
+                                        onSexSelected = {contactFormViewModel.onGenderChange(it)},
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -332,6 +340,7 @@ fun EditBirthdayFirstPage(
                             Spacer(modifier = Modifier.height(16.dp))
                             TextField(modifier = Modifier.height(200.dp)
                                 .fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                                 value = formState.personalNote, onValueChange = {contactFormViewModel.onPersonalNoteChange(it)},
                                 placeholder = { Text("Add any special notes, preferences, or memories", style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
