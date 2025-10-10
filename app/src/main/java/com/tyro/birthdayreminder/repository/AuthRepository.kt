@@ -28,6 +28,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.messaging.FirebaseMessaging
 import com.tyro.birthdayreminder.BuildConfig
 import com.tyro.birthdayreminder.custom_class.compressBitmap
 import io.github.jan.supabase.SupabaseClient
@@ -169,6 +170,30 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteFcmToken(uid: String): Result<Unit> {
+        return try {
+            // Get the current device's FCM token
+            val currentToken = FirebaseMessaging.getInstance().token.await()
+            if (currentToken.isNullOrBlank()) {
+                return Result.failure(Exception("No FCM token found for this device"))
+            }
+
+            // Delete only this user's current device token
+            supabase.from("user_tokens")
+                .delete {
+                    filter {
+                        eq("user_id", uid)
+                        eq("fcm_token", currentToken)
+                    }
+                }
+
+            FirebaseMessaging.getInstance().deleteToken()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun uploadProfilePhoto(uid: String, bitmap: Bitmap): Result<String>{
         return try{
             val bucket = supabase.storage.from("profile-photos")
@@ -205,28 +230,10 @@ class AuthRepository @Inject constructor(
         return auth.uid
     }
 
-//    suspend fun deleteAccount(): Result<Boolean>{
-//        return try{
-//            val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
-//
-//            fireStore.collection("users")
-//                .document(user.uid)
-//                .delete().await()
-//
-//            user.delete().await()
-//
-//            Result.success(true)
-//        }catch (e: Exception){
-//            Log.d("error", e.toString())
-//            Result.failure(Exception(mapAuthError(e)))
-//        }
-//    }
 
     suspend fun reAuthenticateAndDelete(password: String): Result<Boolean> {
         return try {
             val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
-
-            // Create credential
             val credential = user.email?.let { EmailAuthProvider.getCredential(it, password) }
 
             // Reauthenticate
@@ -234,7 +241,9 @@ class AuthRepository @Inject constructor(
                 user.reauthenticate(credential).await()
             }
 
-            // Delete after reauth
+            deleteProfilePhoto(user.uid)
+            fireStore.collection("users").document(user.uid).delete().await()
+
             user.delete().await()
 
             Result.success(true)
@@ -249,6 +258,26 @@ class AuthRepository @Inject constructor(
         return fireStore.collection("users")
             .document(uid)
             .get().await()
+    }
+
+    suspend fun deleteProfilePhoto(uid: String): Result<Unit> {
+        return try {
+            val bucket = supabase.storage.from("profile-photos")
+            val path = "profile-photos/$uid/profile.jpg"
+
+            // Delete from Supabase storage
+            bucket.delete(path)
+
+            // Remove reference from Firestore
+            fireStore.collection("users")
+                .document(uid)
+                .update(mapOf("profilePhotoUrl" to null))
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
 

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ContactActionMenu(
     onEditBirthday: () -> Unit,
+    onRemovePhoto: () -> Unit,
     onDeleteContact: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -63,7 +64,7 @@ fun ContactActionMenu(
                             imageVector = Icons.Default.Edit,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.background(shape = CircleShape, color = Color.LightGray.copy(0.5f))
+                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer)
                                 .padding(8.dp)
                         )
                     }
@@ -78,10 +79,28 @@ fun ContactActionMenu(
                 text = {
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
 //                        Text("Remove Photo")
+                        Icon(painter = painterResource(id = R.drawable.outline_frame_person_off_24),
+                            tint = MaterialTheme.colorScheme.error,
+                            contentDescription = null,
+                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
+                                .padding(8.dp)
+                        )
+                    }
+                },
+                onClick = {
+                    expanded = false
+                    onRemovePhoto()
+                }
+            )
+
+            DropdownMenuItem(
+                text = {
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+//                        Text("Remove Photo")
                         Icon(imageVector = Icons.Default.Delete,
                             tint = MaterialTheme.colorScheme.error,
                             contentDescription = null,
-                            modifier = Modifier.background(shape = CircleShape, color = Color.LightGray.copy(0.5f))
+                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
                                 .padding(8.dp)
                         )
                     }
@@ -122,8 +141,8 @@ fun ProfileActionMenu(
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
                         Icon(painter = painterResource(id = R.drawable.outline_frame_person_off_24),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.background(shape = CircleShape, color = Color.LightGray.copy(0.5f))
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
                                 .padding(8.dp)
                         )
                     }

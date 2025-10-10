@@ -31,7 +31,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MyFirebaseMessagingService: FirebaseMessagingService() {
 
-
     @Inject
     lateinit var supabase: SupabaseClient
 

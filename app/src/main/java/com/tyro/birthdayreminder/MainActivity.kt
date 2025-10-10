@@ -58,6 +58,7 @@ import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 import com.tyro.birthdayreminder.view_model.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -68,6 +69,7 @@ class MainActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
     private val birthdayContactViewModel: BirthdayContactViewModel by viewModels()
     private val connectivityViewModel: ConnectivityViewModel by viewModels()
+    private val contactFormViewModel: ContactFormViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3Api::class)
     @RequiresApi(Build.VERSION_CODES.O)
@@ -113,6 +115,7 @@ class MainActivity : ComponentActivity() {
                         themeViewModel =  themeViewModel,
                         birthdayContactViewModel = birthdayContactViewModel,
                         connectivityViewModel = connectivityViewModel,
+                        contactFormViewModel = contactFormViewModel,
                         startDestination = startDestination
                     )
 //                NotificationScreen(navHostController = rememberNavController())

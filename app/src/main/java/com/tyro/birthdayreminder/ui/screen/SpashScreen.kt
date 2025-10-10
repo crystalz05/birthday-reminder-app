@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,7 @@ fun SplashScreen(
         Alignment.Center)
     {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(painter = painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = "Splash icon")
+            Icon(painter = painterResource(id = R.mipmap.ic_launcher_foreground), tint = Color.Unspecified, contentDescription = "Splash icon")
             Spacer(modifier = Modifier.height(25.dp))
             CircularProgressIndicator(color = MaterialTheme.colorScheme.onSurface)
         }

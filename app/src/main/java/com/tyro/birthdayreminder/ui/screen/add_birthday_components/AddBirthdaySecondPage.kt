@@ -1,6 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen.add_birthday_components
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,17 +59,15 @@ import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 @Composable
 fun AddBirthdaySecondPage(
     innerPadding: PaddingValues,
-    contactFormViewModel: ContactFormViewModel = hiltViewModel()
+    contactFormViewModel: ContactFormViewModel
 ){
 
     val formState by contactFormViewModel.formState.collectAsState()
-
 
     Column(modifier = Modifier.padding(innerPadding)
         .padding(16.dp).fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
 
         Card(modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,

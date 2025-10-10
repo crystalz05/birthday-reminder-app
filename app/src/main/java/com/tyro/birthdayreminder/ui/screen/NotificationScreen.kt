@@ -1,5 +1,8 @@
 package com.tyro.birthdayreminder.ui.screen
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import com.tyro.birthdayreminder.R
 import androidx.compose.foundation.background
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -40,6 +44,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,7 +60,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAboutSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileAppearanceSection
@@ -63,14 +71,34 @@ import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.Pr
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfilePrivacyAndSecuritySection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.ProfileSupportSection
 import com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components.SettingSwitchItem
+import com.tyro.birthdayreminder.view_model.AuthViewModel
+import com.tyro.birthdayreminder.view_model.NotificationViewModel
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationScreen(navHostController: NavHostController) {
+fun NotificationScreen(
+    navHostController: NavHostController,
+    notificationViewModel: NotificationViewModel = hiltViewModel()
+) {
 
     var activeTab by remember { mutableStateOf("All") }
     val tabs = listOf("All", "Unread")
+
+    val uiState by notificationViewModel.notificationUiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        notificationViewModel.getNotifications()
+    }
+
+    LaunchedEffect(Unit) {
+        notificationViewModel.observeRealtimeNotifications()
+    }
+
+    val notifications = uiState.notifications
+
+    Log.d("Notification Screen", notifications.toString())
 
     Scaffold(
         topBar = {
@@ -126,42 +154,18 @@ fun NotificationScreen(navHostController: NavHostController) {
             }
             Spacer(Modifier.height(16.dp))
             LazyColumn(modifier = Modifier.weight(1f)) {
-                item {
+
+                items(notifications){ notification ->
                     NotificationItem(
-                        R.drawable.ic_launcher_foreground,
-                        "Birthday Reminder",
-                        "In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday.",
-                        "Today - 08:24"
+                        R.mipmap.ic_launcher_foreground,
+                        notification.title,
+                        notification.body,
+                        notification.sent_at
                     )
                     Spacer(Modifier.height(16.dp))
-                    NotificationItem(
-                        R.drawable.ic_launcher_foreground,
-                        "Birthday Reminder",
-                        "In one of those three weeks there should be some way to bring it up.",
-                        "Today - 08:24"
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    NotificationItem(
-                        R.drawable.ic_launcher_foreground,
-                        "Birthday Reminder",
-                        "In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday. In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday.",
-                        "Today - 08:24"
-                    )
-                    NotificationItem(
-                        R.drawable.ic_launcher_foreground,
-                        "Birthday Reminder",
-                        "In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday. In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday.",
-                        "Today - 08:24"
-                    )
-                    NotificationItem(
-                        R.drawable.ic_launcher_foreground,
-                        "Birthday Reminder",
-                        "In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday. In one of those three weeks there should be some way to bring it up. Of course you could wait and say “I can't believe that you forgot my birthday.",
-                        "Today - 08:24"
-                    )
+
                 }
             }
-
         }
     }
 }
@@ -177,17 +181,19 @@ fun NotificationItem(icon: Int, title: String, message: String, date: String){
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
-                        Icon(painter = painterResource(id = icon), modifier = Modifier.size(48.dp), contentDescription = null)
+                        Icon(painter = painterResource(id = icon),
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(48.dp), contentDescription = null)
                         Text(title, style = MaterialTheme.typography.titleMedium)
                     }
                     Text(message,
-                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Light)
+                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Normal)
                     Spacer(Modifier.height(8.dp))
                     HorizontalDivider(thickness = 0.4.dp)
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = date, overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Light)
+                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Normal)
                 }
             }
         }

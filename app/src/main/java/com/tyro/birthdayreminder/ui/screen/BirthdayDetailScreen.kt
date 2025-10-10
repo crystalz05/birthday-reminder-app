@@ -105,18 +105,15 @@ fun BirthdayDetailScreen(
     val contact by birthdayContactViewModel.contactDetail.collectAsState()
     val name = contact?.fullName
     val relationship = contact?.relationship
-    val currentAge = contact?.birthday?.let { getAge(it) }
     val gender = contact?.gender
     val turningAge = contact?.birthday?.let { getAgeOnNextBirthday(it) }
-    val (month, day) = contact?.birthday?.let { getMonthAndDay(it) } ?: (null to null)
-    val dayOfWeek = contact?.birthday?.let { getDayOfWeek(it) }
-    val (monthLeft, daysLeft) = contact?.birthday?.let { getDaysLeft(it) } ?: (null to null)
-    val birthDayDateIntValue = contact?.birthday?.let { getDate(it) }
     val photoUrl = contact?.photo
 
     val phoneNumber = contact?.phoneNumber
     val email = contact?.email
     val instagram = contact?.instagram
+
+    val userId = contact?.userId
 
     var showDialog by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -307,6 +304,16 @@ fun BirthdayDetailScreen(
                                     ContactActionMenu(
                                         onEditBirthday = {
                                             navHostController.navigate(Screen.EditBirthDay.passContactId(contactId))
+                                        },
+                                        onRemovePhoto = {
+                                            if (contactId != null) {
+                                                if (userId != null) {
+                                                    birthdayContactViewModel.deleteContactPhoto(userId, contactId){
+                                                        birthdayContactViewModel.loadSingleContact(contactId)
+                                                    }
+                                                }
+                                            }
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         },
                                         onDeleteContact = {
                                             showDialog = true

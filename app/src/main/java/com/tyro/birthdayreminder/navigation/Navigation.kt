@@ -34,6 +34,7 @@ import com.tyro.birthdayreminder.ui.screen.StatsScreen
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 import com.tyro.birthdayreminder.view_model.ThemeViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -44,6 +45,7 @@ fun Navigation(
     themeViewModel: ThemeViewModel,
     birthdayContactViewModel: BirthdayContactViewModel,
     connectivityViewModel: ConnectivityViewModel,
+    contactFormViewModel: ContactFormViewModel,
     startDestination: String = Screen.Splash.route
 
 ) {
@@ -68,10 +70,10 @@ fun Navigation(
             }
         }
         composable(Screen.Home.route){
-            HomeScreen(navHostController, authViewModel)
+            HomeScreen(navHostController, authViewModel, contactFormViewModel)
         }
         composable(Screen.AddBirthDay.route) {
-            AddBirthdayScreen(navHostController)
+            AddBirthdayScreen(navHostController, contactFormViewModel)
         }
         composable(Screen.ProfileSetting.route){
             ProfileSettingScreen(navHostController, authViewModel, themeViewModel)

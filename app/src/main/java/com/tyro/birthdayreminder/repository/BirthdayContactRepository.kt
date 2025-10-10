@@ -30,7 +30,6 @@ import io.ktor.http.*
 
 class BirthdayContactRepository @Inject constructor(
     private val auth: FirebaseAuth,
-    private val fireStore: FirebaseFirestore,
     private val supabase: SupabaseClient)
 {
 
@@ -149,11 +148,17 @@ class BirthdayContactRepository @Inject constructor(
 
     suspend fun deleteContact(contactId: String): Result<Contact>{
         return try {
+
+            val uid = auth.currentUser?.uid ?: throw Exception("Not Logged in")
+
             val deleted = supabase.from("contacts")
                 .delete {
                     filter { eq("id", contactId) }
                     select() }
                 .decodeSingle<Contact>()
+
+            deleteContactPhoto(uid, contactId)
+
             Result.success(deleted)
         }catch (e: Exception){
             Result.failure(e)
@@ -169,6 +174,11 @@ class BirthdayContactRepository @Inject constructor(
                     filter { eq("userId", uid) }
                     select() }
                 .decodeList<Contact>()
+
+            deleted.forEach { contact ->
+                contact.id?.let { deleteContactPhoto(uid, it) }
+            }
+
             Result.success(deleted)
         }catch (e: Exception){
             Result.failure(e)
@@ -228,6 +238,26 @@ class BirthdayContactRepository @Inject constructor(
             Result.success(result)
         } catch (e: Exception) {
             Log.e("updateContactWishList", "Failed to update wishList: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteContactPhoto(uid: String, contactId: String): Result<Unit> {
+        return try {
+            val bucket = supabase.storage.from("profile-photos")
+            val path = "profile-photos/$uid/contacts/$contactId/image.jpg"
+
+            // ✅ Supabase requires a list of file paths, not a single string
+            bucket.delete(listOf(path))
+
+            // ✅ Also clear the photo field in the contact table
+            supabase.from("contacts")
+                .update(mapOf("photo" to null)) {
+                    filter { eq("id", contactId) }
+                }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

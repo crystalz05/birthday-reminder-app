@@ -5,10 +5,12 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.ContactsContract
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,6 +40,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,14 +53,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldAction
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldNavigation
 import com.tyro.birthdayreminder.ui.screen.scaffold_contents.ScaffoldTitle
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactScreen() {
+fun ContactScreen(
+    navHostController: NavHostController,
+    contactFormViewModel: ContactFormViewModel
+) {
+
+    val formState by contactFormViewModel.formState.collectAsState()
 
     val context = LocalContext.current
 
@@ -103,7 +114,15 @@ fun ContactScreen() {
                         }
                     }
                     items(contactsInGroup) { (name, number) ->
-                        Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+                        Column(
+                            Modifier.padding(horizontal = 24.dp, vertical = 12.dp).fillMaxWidth()
+                                .clickable {
+                                    contactFormViewModel.fullNameChange(name)
+                                    contactFormViewModel.onPhoneNumberChange(formatPhoneNumber(number))
+                                    Log.d("Contact Screen", formState.fullName)
+                                    navHostController.navigate(Screen.AddBirthDay.route)
+                                }
+                        ) {
                             Text(name)
                             Text(number, color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
                         }
@@ -169,4 +188,19 @@ fun ContactPermissionRequester(
             Text("Request Contacts Permission")
         }
     }
+}
+
+fun formatPhoneNumber(number: String): String {
+    // Remove spaces, dashes, and parentheses
+    var formattedNumber = number.replace(Regex("[\\s-()]"), "")
+
+    // Handle international format starting with +234 or 234
+    formattedNumber = when {
+        formattedNumber.startsWith("+234") -> "0" + formattedNumber.removePrefix("+234")
+        formattedNumber.startsWith("234") -> "0" + formattedNumber.removePrefix("234")
+        formattedNumber.startsWith("0") -> formattedNumber
+        else -> "0" + formattedNumber.takeLast(10)
+    }
+
+    return if (formattedNumber.length > 11) formattedNumber.takeLast(11) else formattedNumber
 }

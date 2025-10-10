@@ -255,9 +255,15 @@ class AuthViewModel @Inject constructor(
     fun signOut(context: Context){
         _authState.update { AuthState.Loading }
         viewModelScope.launch {
+            val uid = authRepository.getUid()
+            if (uid != null) {
+                authRepository.deleteFcmToken(uid)
+            }
+
             authRepository.signOut()
             clearUserData()
             clearImageCache(context)
+
             _authState.update { AuthState.LoggedOut }
             _uiEvent.send(UiEvent.Navigate(Screen.Login.route))
             _uiEvent.send(UiEvent.ShowSnackBar("Signed out successfully"))
@@ -303,6 +309,33 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun deleteProfilePhoto(){
+        val currentUser = authRepository.currentUser()
+        if(currentUser != null){
+            viewModelScope.launch {
+
+                _authState.update { AuthState.Loading }
+
+                val uid = authRepository.getUid()
+
+                // 🧹 Always try to remove FCM token before deleting account
+                if (uid != null) {
+                    authRepository.deleteFcmToken(uid)
+                }
+
+                val result = authRepository.deleteProfilePhoto(currentUser.uid)
+                result.onSuccess {
+                    _imageUrl.update { null } // clear local state
+                    _uiEvent.send(UiEvent.ShowSnackBar("Profile photo removed"))
+                    _authState.update { AuthState.Idle }
+                }.onFailure { e ->
+                    _uiEvent.send(UiEvent.ShowSnackBar("Failed to remove photo: ${e.message}"))
+                    _authState.update { AuthState.Idle }
+                }
+            }
+        }
+    }
+
     private fun clearUserData() {
         _imageUrl.value = null
         _fullName.value = null
@@ -313,4 +346,5 @@ class AuthViewModel @Inject constructor(
         context.imageLoader.memoryCache?.clear()
         context.imageLoader.diskCache?.clear()
     }
+
 }

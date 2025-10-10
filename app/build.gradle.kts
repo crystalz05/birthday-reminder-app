@@ -117,13 +117,15 @@ dependencies {
 
     implementation(platform("io.github.jan-tennert.supabase:bom:3.2.3"))
     implementation("io.github.jan-tennert.supabase:storage-kt-android:3.2.3")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
     implementation("io.ktor:ktor-client-android:3.2.3")
 
-    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
     implementation("io.coil-kt.coil3:coil-gif:3.3.0")
     implementation("io.coil-kt.coil3:coil-svg:3.3.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation (libs.firebase.messaging)

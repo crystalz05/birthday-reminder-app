@@ -48,7 +48,7 @@ import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 @Composable
 fun AddBirthdayThirdPage(
     paddingValues: PaddingValues,
-    contactFormViewModel: ContactFormViewModel = hiltViewModel()
+    contactFormViewModel: ContactFormViewModel
 ){
 
     val formState by contactFormViewModel.formState.collectAsState()
@@ -150,12 +150,12 @@ fun AddBirthdayThirdPage(
         )
     }
 }
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun AddBirthdayThirdPagePreview(){
-
-    BirthdayReminderTheme {
-        AddBirthdayThirdPage(PaddingValues(16.dp))
-    }
-}
+//
+//@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
+//@Composable
+//fun AddBirthdayThirdPagePreview(){
+//
+//    BirthdayReminderTheme {
+//        AddBirthdayThirdPage(PaddingValues(16.dp))
+//    }
+//}

@@ -98,6 +98,10 @@ class ContactFormViewModel @Inject constructor(): ViewModel() {
         }
     }
 
+    fun resetForm(){
+        _formState.update { ContactFormState() }
+    }
+
     fun on3DaysToggled(){
         _formState.update { state ->
             val updateReminders = state.reminders.toMutableList()

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -66,7 +67,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddBirthdayScreen(
     navHostController: NavHostController,
-    contactFormViewModel: ContactFormViewModel = hiltViewModel(),
+    contactFormViewModel: ContactFormViewModel,
     birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel()
 ) {
 
@@ -148,14 +149,16 @@ fun AddBirthdayScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground) },
                     navigationIcon = {
-                        IconButton(onClick = {navHostController.navigateUp()},
+                        Button(
+                            onClick = { navHostController.navigateUp() },
+                            shape = RoundedCornerShape(4.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            ),
                             modifier = Modifier.padding(start = 10.dp, end = 20.dp)
-                        ){
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
+                        ) {
+                            Text("Cancel")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -216,13 +219,13 @@ fun AddBirthdayScreen(
             .fillMaxSize(), Alignment.Center){
             when(currentPage){
                 FormPage.FIRST ->
-                    AddBirthdayFirstPage(innerPadding)
+                    AddBirthdayFirstPage(innerPadding, contactFormViewModel)
 
                 FormPage.SECOND ->
-                    AddBirthdaySecondPage(innerPadding)
+                    AddBirthdaySecondPage(innerPadding, contactFormViewModel)
 
                 FormPage.THIRD ->
-                    AddBirthdayThirdPage(innerPadding)
+                    AddBirthdayThirdPage(innerPadding, contactFormViewModel)
             }
             if (contactOperationState is ContactOperationState.Loading) {
                 Loading()

@@ -73,7 +73,7 @@ import java.util.Locale
 @Composable
 fun AddBirthdayFirstPage(
     innerPadding: PaddingValues,
-    contactFormViewModel: ContactFormViewModel = hiltViewModel()
+    contactFormViewModel: ContactFormViewModel
     ){
 
     val formState by contactFormViewModel.formState.collectAsState()

@@ -79,6 +79,7 @@ import com.tyro.birthdayreminder.ui.screen.home_screen_items.UpComingBirthdays
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
+import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -90,9 +91,12 @@ import java.time.YearMonth
 fun HomeScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel,
+    contactFormViewModel: ContactFormViewModel,
     birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel(),
-    connectivityViewModel: ConnectivityViewModel = hiltViewModel()
+    connectivityViewModel: ConnectivityViewModel = hiltViewModel(),
 ) {
+
+    contactFormViewModel.resetForm()
     val contactOperationState by birthdayContactViewModel.contactOperationState.collectAsState()
 
     var currentTab by remember { mutableStateOf("Home") }
@@ -108,10 +112,10 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
-        when(getTimeOfDay()){
-            "morning" -> greeting = "Good Morning!"
-            "afternoon" -> greeting = "Good Afternoon!"
-            else -> greeting = "Good Evening!"
+        greeting = when(getTimeOfDay()){
+            "morning" -> "Good Morning!"
+            "afternoon" -> "Good Afternoon!"
+            else -> "Good Evening!"
         }
     }
 
@@ -303,7 +307,7 @@ fun HomeScreen(
                         }
                     "Contact"->
                         Column(modifier = Modifier.padding(innerPadding)) {
-                            ContactScreen()
+                            ContactScreen(navController, contactFormViewModel)
                         }
                     "Profile"->
                         Column(modifier = Modifier.padding(innerPadding)) {

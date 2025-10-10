@@ -146,6 +146,21 @@ class BirthdayContactViewModel @Inject constructor(
         }
     }
 
+    fun deleteContactPhoto(userId: String, contactId: String, onReload: (()-> Unit)? = null) {
+        viewModelScope.launch {
+            val result = birthdayContactRepository.deleteContactPhoto(userId, contactId)
+            result.onSuccess {
+                _uiEvent.send(UiEvent.ShowSnackBar("Profile photo removed"))
+                _contactOperationState.update { ContactOperationState.Idle }
+                onReload?.invoke()
+            }.onFailure { e ->
+                _contactOperationState.update {
+                    ContactOperationState.Error(e.message ?: "Error removing photo")
+                }
+            }
+        }
+    }
+
     fun updateWishList(contactId: String, newWishList: List<WishItem>) {
         viewModelScope.launch {
             birthdayContactRepository.updateContactWishList(contactId, newWishList)
