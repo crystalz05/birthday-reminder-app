@@ -80,7 +80,7 @@ import com.tyro.birthdayreminder.view_model.NotificationViewModel
 @Composable
 fun NotificationScreen(
     navHostController: NavHostController,
-    notificationViewModel: NotificationViewModel = hiltViewModel()
+    notificationViewModel: NotificationViewModel
 ) {
 
     var activeTab by remember { mutableStateOf("All") }

@@ -67,14 +67,12 @@ fun UpComingBirthdays(
     birthdayContactViewModel: BirthdayContactViewModel
 ) {
 
-
     val contacts by birthdayContactViewModel.contacts.collectAsState()
 
     val upComingContacts = contacts.filter {contact -> getDayOfYear(contact.birthday) > LocalDate.now().dayOfYear  }
     fun daysLeft(yearDay: String): Int{
         return getDayOfYear(yearDay) - LocalDate.now().dayOfYear
     }
-    val currentYear = LocalDate.now().year
 
     Card(modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background,
@@ -90,53 +88,7 @@ fun UpComingBirthdays(
             Spacer(Modifier.height(24.dp))
 
             upComingContacts.forEach { contact ->
-
-                val (months, days) = getDaysLeft(contact.birthday)
-
-                val daysLeftString = when {
-                    months == 0 && days == 0 -> "Today"
-                    months == 0 && days == 1 -> "Tomorrow"
-                    months == 0 -> "In $days day${if (days != 1) "s" else ""}"
-                    else -> "In $months month${if (months != 1) "s" else ""} $days day${if (days != 1) "s" else ""}"
-                }
-
-                val (month, day) = getMonthAndDay(contact.birthday)
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(
-                            color = Color.Black.copy(alpha = 0.2f),
-                            bounded = true
-                        )
-                    ) { navHostController.navigate(Screen.BirthDayDetail.passContactId(contact.id)) }.padding(vertical = 24.dp)) {
-                    Box(modifier = Modifier.background(color = Color.Gray, shape = CircleShape).size(50.dp), Alignment.Center){
-
-                        AsyncImage(
-                            model = contact.photo,
-                            contentDescription = "Profile Photo",
-                            contentScale = ContentScale.Crop,
-                            placeholder = painterResource(id = R.drawable.baseline_person_24),
-                            error = painterResource(id = R.drawable.baseline_person_24),
-                            modifier = Modifier.clip(CircleShape).size(100.dp)
-                        )
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        Column {
-                            Text(contact.fullName, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium)
-                            Text("Turning ${currentYear-getYear(contact.birthday)}", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Light)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                titleCase("${Month(month)} $day"), modifier = Modifier
-                                .border(border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)), shape = RoundedCornerShape(10.dp))
-                                .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                .padding(horizontal = 12.dp, vertical = 2.dp), color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Light
-                            )
-                            Text(daysLeftString, modifier = Modifier.padding(end = 4.dp), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Light)
-                        }
-                    }
-                }
+                ContactCard(contact, navHostController)
                 HorizontalDivider(thickness = 1.dp, modifier = Modifier.padding(start = 64.dp))
             }
         }

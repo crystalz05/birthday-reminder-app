@@ -35,6 +35,7 @@ import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
 import com.tyro.birthdayreminder.view_model.ContactFormViewModel
+import com.tyro.birthdayreminder.view_model.NotificationViewModel
 import com.tyro.birthdayreminder.view_model.ThemeViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -46,6 +47,7 @@ fun Navigation(
     birthdayContactViewModel: BirthdayContactViewModel,
     connectivityViewModel: ConnectivityViewModel,
     contactFormViewModel: ContactFormViewModel,
+    notificationViewModel: NotificationViewModel,
     startDestination: String = Screen.Splash.route
 
 ) {
@@ -106,7 +108,7 @@ fun Navigation(
             EditBirthdayScreen(navHostController, contactId)
         }
         composable(Screen.Notification.route) {
-            NotificationScreen(navHostController)
+            NotificationScreen(navHostController, notificationViewModel )
         }
         composable(Screen.Profile.route){
             ProfileScreen(navHostController, authViewModel)

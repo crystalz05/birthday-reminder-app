@@ -51,6 +51,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +75,7 @@ import com.tyro.birthdayreminder.custom_class.connection_manager.ConnectivityObs
 import com.tyro.birthdayreminder.custom_class.getTimeOfDay
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.OptionsCard
+import com.tyro.birthdayreminder.ui.screen.home_screen_items.SearchInterface
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.TodayBirthday
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.UpComingBirthdays
 import com.tyro.birthdayreminder.view_model.AuthViewModel
@@ -99,7 +101,7 @@ fun HomeScreen(
     contactFormViewModel.resetForm()
     val contactOperationState by birthdayContactViewModel.contactOperationState.collectAsState()
 
-    var currentTab by remember { mutableStateOf("Home") }
+    var currentTab by rememberSaveable { mutableStateOf("Home") }
 
     val imageUrl by authViewModel.imageUrl.collectAsState()
     val fullName by authViewModel.fullName.collectAsState()
@@ -124,6 +126,7 @@ fun HomeScreen(
 
     val tabs = listOf(
         TabItem("Home", Icons.Outlined.Home, ""),
+        TabItem("Search", Icons.Outlined.Search, ""),
         TabItem("Contact", Icons.Outlined.AccountBox, ""),
         TabItem("Calendar", Icons.Outlined.DateRange, ""),
         TabItem("Profile", Icons.Outlined.Person, ""),
@@ -178,6 +181,8 @@ fun HomeScreen(
     }
 
 
+//    var isSearchVisible by remember { mutableStateOf(false) }
+    var isSearchVisible by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) },
@@ -189,10 +194,12 @@ fun HomeScreen(
                     modifier = Modifier.padding(16.dp))},
                 navigationIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 16.dp).clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {navController.navigate(Screen.ProfileSetting.route)}) {
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { navController.navigate(Screen.ProfileSetting.route) }) {
                         Box(modifier = Modifier
                             .size(50.dp, 50.dp)
                             .border(
@@ -207,7 +214,8 @@ fun HomeScreen(
                                 error = painterResource(id = R.drawable.baseline_person_24),
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .fillMaxSize().padding(2.dp)
+                                    .fillMaxSize()
+                                    .padding(2.dp)
                                     .align(Alignment.Center)
                                     .clip(CircleShape)
                             )
@@ -230,7 +238,10 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = {
+                        isSearchVisible = true
+                        currentTab = "Search"
+                    }) {
                         Icon(imageVector = Icons.Outlined.Search, contentDescription = "")
                     }
                     IconButton(onClick = {navController.navigate(Screen.Notification.route)}) {
@@ -259,7 +270,13 @@ fun HomeScreen(
                             index, tab ->
                         Tab(
                             selected = selectedIndex == index,
-                            onClick = {currentTab = tab.title},
+                            onClick = {
+                                currentTab = tab.title
+                                isSearchVisible = false
+                                if(tab.title == "Search") {
+                                    isSearchVisible = true
+                                }
+                                      },
                             text = { Text(tab.title) },
                             icon = {Icon(tab.icon, contentDescription = null)},
                         )
@@ -270,6 +287,7 @@ fun HomeScreen(
         content = { innerPadding ->
 
             Box(modifier = Modifier.fillMaxSize(), Alignment.Center){
+
                 when(currentTab){
                     "Home" ->
                         PullToRefreshCustomStyle(content = {
@@ -314,6 +332,13 @@ fun HomeScreen(
                             ProfileScreen(navController, authViewModel)
                         }
                 }
+
+                SearchInterface(
+                    isSearchVisible,
+                    openSearch = { isSearchVisible = true },
+                    closeSearch = { isSearchVisible = false },
+                    navController
+                )
 
                 if (contactOperationState is ContactOperationState.Loading || authState is AuthState.Loading) {
                     Loading(
