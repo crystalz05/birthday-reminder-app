@@ -2,6 +2,7 @@ package com.tyro.birthdayreminder.ui.screen
 
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -149,12 +151,17 @@ fun AddBirthdayScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onBackground) },
                     navigationIcon = {
-                        Button(
+                        OutlinedButton(
                             onClick = { navHostController.navigateUp() },
-                            shape = RoundedCornerShape(4.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
+                            shape = RoundedCornerShape(
+                                topStart = 50.dp,
+                                topEnd = 0.dp,
+                                bottomEnd = 0.dp,
+                                bottomStart = 50.dp
+                            ),
+                            border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.error),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error,
                             ),
                             modifier = Modifier.padding(start = 10.dp, end = 20.dp)
                         ) {

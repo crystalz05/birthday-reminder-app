@@ -7,6 +7,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -41,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
@@ -57,10 +60,10 @@ fun SearchInterface(
     navHostController: NavHostController,
     birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel()
     ) {
+    val focusManager = LocalFocusManager.current
 
     val contacts by birthdayContactViewModel.contacts.collectAsState()
     var query by remember { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
 
         // Search overlay
         AnimatedVisibility(
@@ -80,24 +83,63 @@ fun SearchInterface(
                     ) { focusManager.clearFocus() }
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Spacer(Modifier.height(100.dp))
 
-                    OutlinedTextField(
-                        shape = RoundedCornerShape(100),
-                        value = query,
-                        onValueChange = { query = it },
-                        placeholder = { Text("Search contacts...") },
+//                    OutlinedTextField(
+//                        value = query,
+//                        onValueChange = { query = it },
+//                        placeholder = { Text("Search contacts...") },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(48.dp), // reduce height here
+//                        shape = RoundedCornerShape(100),
+//                        colors = TextFieldDefaults.colors(
+//                            unfocusedIndicatorColor = Color.Transparent,
+//                            focusedIndicatorColor = Color.Transparent,
+//                            focusedContainerColor = Color.Transparent,
+//                            focusedTextColor = MaterialTheme.colorScheme.primary
+//                        ),
+//                        textStyle = MaterialTheme.typography.bodyMedium
+//                    )
+
+                    var query by remember { mutableStateOf("") }
+                    var isFocused by remember { mutableStateOf(false) }
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp), // reduce height (default ~56.dp)
-                        colors = TextFieldDefaults.colors(
-//                            unfocusedContainerColor = MaterialTheme.colorScheme.onBackground.copy(0.4f),
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            focusedTextColor = MaterialTheme.colorScheme.primary
+                            .height(40.dp)
+                            .border(
+                                width = if (isFocused) 1.5.dp else 1.dp,
+                                color = if (isFocused)
+                                    Color.Transparent
+                                else
+                                    Color.Gray.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(100)
+                            )
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        BasicTextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged { focusState ->
+                                    isFocused = focusState.isFocused
+                                },
+                            decorationBox = { innerTextField ->
+                                if (query.isEmpty()) Text(
+                                    "Search contacts...",
+                                    color = Color.Gray
+                                )
+                                innerTextField()
+                            }
                         )
-                    )
+                    }
 
                     Spacer(Modifier.height(8.dp))
 

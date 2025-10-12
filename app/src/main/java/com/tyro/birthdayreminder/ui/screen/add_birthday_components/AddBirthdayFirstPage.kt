@@ -42,6 +42,7 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -105,15 +106,23 @@ fun AddBirthdayFirstPage(
     ) {
 
         if (showDatePicker) {
+
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val selectedDateMillis = try {
+                formatter.parse(formState.birthday)?.time
+            } catch (e: Exception) {
+                null
+            }
+
             DatePickerModal(
                 onDateSelected = { millis ->
                     millis?.let {
-                        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                         contactFormViewModel.onBirthDateChange(formatter.format(Date(it)))
                     }
                     showDatePicker = false
                 },
-                onDismiss = { showDatePicker = false }
+                onDismiss = { showDatePicker = false },
+                initialDateMillis = selectedDateMillis
             )
         }
 
@@ -247,7 +256,8 @@ fun AddBirthdayFirstPage(
                                     focusedIndicatorColor = Color.Transparent,
                                     unfocusedIndicatorColor = Color.Transparent,
                                     disabledIndicatorColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent
+                                    disabledContainerColor = Color.Transparent,
+                                    disabledTextColor = MaterialTheme.colorScheme.onBackground
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             )

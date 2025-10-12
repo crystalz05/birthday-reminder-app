@@ -117,15 +117,22 @@ fun EditBirthdayFirstPage(
     ) {
 
         if (showDatePicker) {
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val selectedDateMillis = try {
+                formatter.parse(formState.birthday)?.time
+            } catch (e: Exception) {
+                null
+            }
+
             DatePickerModal(
                 onDateSelected = { millis ->
                     millis?.let {
-                        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                         contactFormViewModel.onBirthDateChange(formatter.format(Date(it)))
                     }
                     showDatePicker = false
                 },
-                onDismiss = { showDatePicker = false }
+                onDismiss = { showDatePicker = false },
+                initialDateMillis = selectedDateMillis
             )
         }
         LazyColumn() {
@@ -259,7 +266,8 @@ fun EditBirthdayFirstPage(
                                             focusedIndicatorColor = Color.Transparent,
                                             unfocusedIndicatorColor = Color.Transparent,
                                             disabledIndicatorColor = Color.Transparent,
-                                            disabledContainerColor = Color.Transparent
+                                            disabledContainerColor = Color.Transparent,
+                                            disabledTextColor = MaterialTheme.colorScheme.onBackground
                                         ),
                                         shape = RoundedCornerShape(8.dp)
                                     )

@@ -79,16 +79,24 @@ fun ProfilePhotoSection(
         }
     }
 
-    Card(modifier = Modifier.border(width = 2.dp, color = Color.Transparent, shape = RoundedCornerShape(6.dp))
-        .padding(16.dp),
+    Card(modifier = Modifier
+        .border(width = 2.dp, color = Color.Transparent, shape = RoundedCornerShape(6.dp)),
         content = {
-            Box(modifier = Modifier.fillMaxWidth()
+            Box(modifier = Modifier
+                .fillMaxWidth()
                 .background(color = MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
-                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(Modifier.size(110.dp, 110.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), shape = CircleShape), Alignment.Center){
-                        Box(Modifier.size(100.dp, 100.dp).background(Color.White, shape = CircleShape), Alignment.Center, content = {})
+                Column(modifier = Modifier, verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier
+                        .size(110.dp, 110.dp)
+                        .background(
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        ), Alignment.Center){
+                        Box(Modifier
+                            .size(100.dp, 100.dp)
+                            .background(Color.White, shape = CircleShape), Alignment.Center, content = {})
 
                         AsyncImage(
                             model = imageUrl,
@@ -96,7 +104,8 @@ fun ProfilePhotoSection(
                             placeholder = painterResource(id = R.drawable.baseline_person_24),
                             error = painterResource(id = R.drawable.baseline_person_24),
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(100.dp)
+                            modifier = Modifier
+                                .size(100.dp)
                                 .align(Alignment.Center)
                                 .clip(CircleShape)
                         )
@@ -114,7 +123,11 @@ fun ProfilePhotoSection(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .background(color = MaterialTheme.colorScheme.primary.copy(0.5f), shape = CircleShape).padding(6.dp),
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary.copy(0.5f),
+                                        shape = CircleShape
+                                    )
+                                    .padding(6.dp),
                                 tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
@@ -135,6 +148,10 @@ fun ProfilePhotoSection(
                     ProfileActionMenu(
                         onRemovePhoto = {
                             authViewModel.deleteProfilePhoto()
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        onEditAccount = {
+                            navHostController.navigate(Screen.AccountVerification.route)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                     )

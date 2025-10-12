@@ -277,7 +277,7 @@ fun HomeScreen(
                                     isSearchVisible = true
                                 }
                                       },
-                            text = { Text(tab.title) },
+                            text = { Text(tab.title, style = MaterialTheme.typography.labelSmall) },
                             icon = {Icon(tab.icon, contentDescription = null)},
                         )
                     }
@@ -304,6 +304,10 @@ fun HomeScreen(
                                     OptionsCard(
                                         navController,
                                         onclick = {currentTab = "Calendar"},
+                                        onSearchClicked = {
+                                            isSearchVisible = true
+                                            currentTab = "Search"
+                                                          },
                                         birthdayContactViewModel
                                     )
                                     Spacer(Modifier.height(16.dp))
@@ -333,12 +337,14 @@ fun HomeScreen(
                         }
                 }
 
-                SearchInterface(
-                    isSearchVisible,
-                    openSearch = { isSearchVisible = true },
-                    closeSearch = { isSearchVisible = false },
-                    navController
-                )
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    SearchInterface(
+                        isSearchVisible,
+                        openSearch = { isSearchVisible = true },
+                        closeSearch = { isSearchVisible = false },
+                        navController
+                    )
+                }
 
                 if (contactOperationState is ContactOperationState.Loading || authState is AuthState.Loading) {
                     Loading(

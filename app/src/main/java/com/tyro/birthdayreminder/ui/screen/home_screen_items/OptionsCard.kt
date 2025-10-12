@@ -50,6 +50,7 @@ import java.time.LocalDate
 fun OptionsCard(
     navHostController: NavHostController,
     onclick:()->Unit,
+    onSearchClicked: () ->Unit,
     birthdayContactViewModel: BirthdayContactViewModel
     ){
 
@@ -76,7 +77,7 @@ fun OptionsCard(
                     Text("Add Contact", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(onClick = {}, modifier = Modifier.background(shape = CircleShape,
+                    IconButton(onClick = {onSearchClicked()}, modifier = Modifier.background(shape = CircleShape,
                         color = Color(0xFFFF9C07)
                     )) {
                         Icon(painterResource(id = R.drawable.baseline_search_24), contentDescription = "")
