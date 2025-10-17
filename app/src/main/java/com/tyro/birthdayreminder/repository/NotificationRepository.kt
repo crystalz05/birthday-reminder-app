@@ -4,6 +4,8 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.firebase.auth.FirebaseAuth
+import com.tyro.birthdayreminder.BuildConfig
+import com.tyro.birthdayreminder.entity.Contact
 import com.tyro.birthdayreminder.entity.Notification
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -22,6 +24,11 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -34,14 +41,12 @@ class NotificationRepository @Inject constructor(
 ) {
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getNotifications(userId: String): Result<List<Notification>> {
-        Log.d(TAG, "getNotifications: Fetching for userId=$userId")
 
         return try {
             val remoteNotifications = supabase
                 .from("notifications")
                 .select { filter { eq("user_id", userId) } }
                 .decodeList<Notification>()
-            Log.d(TAG, "getNotifications: Fetched ${remoteNotifications.size} raw notifications")
 
             val mapped = remoteNotifications.map { dto ->
                 val zoned = LocalDateTime.parse(dto.sent_at).plusHours(1)
@@ -56,11 +61,9 @@ class NotificationRepository @Inject constructor(
                     contact_id = dto.contact_id
                 )
             }
-            Log.d(TAG, "getNotifications: Mapped to ${mapped.size} formatted notifications. Success.")
 
             Result.success(mapped)
         } catch (e: Exception) {
-            Log.e(TAG, "getNotifications: Failed to fetch notifications for userId=$userId", e)
             Result.failure(e)
         }
     }
@@ -69,17 +72,12 @@ class NotificationRepository @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun observeNewNotifications(userId: String, scope: CoroutineScope): Flow<Notification> {
-        Log.d(TAG, "observeNewNotifications: Starting realtime observer for userId=$userId")
         channel = supabase.channel("notifications-channel")  // Fixed: No "realtime:" prefix
 
         scope.launch {
             try {
-                Log.d(TAG, "observeNewNotifications: Subscribing to channel")
                 channel?.subscribe()
-                Log.d(TAG, "observeNewNotifications: Channel subscribed successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "observeNewNotifications: Failed to subscribe to channel", e)
-                // Don't rethrow—let the flow handle it gracefully
             }
         }
 
@@ -89,17 +87,13 @@ class NotificationRepository @Inject constructor(
             .filter { it is PostgresAction.Insert }
             .mapNotNull { it as? PostgresAction.Insert }
             .mapNotNull { change ->
-                Log.d(TAG, "observeNewNotifications: Received insert change: $change")
                 val record = change.record as? JsonObject ?: run {
-                    Log.w(TAG, "observeNewNotifications: Invalid record type, skipping")
                     return@mapNotNull null
                 }
                 val recordUserId = record["user_id"]?.jsonPrimitive?.content ?: run {
-                    Log.w(TAG, "observeNewNotifications: Missing user_id in record, skipping")
                     return@mapNotNull null
                 }
                 if (recordUserId != userId) {
-                    Log.d(TAG, "observeNewNotifications: Change not for userId=$userId, skipping")
                     return@mapNotNull null
                 }
 
@@ -134,4 +128,80 @@ class NotificationRepository @Inject constructor(
         channel = null
         Log.d(TAG, "clearChannel: Channel set to null. Cleanup complete.")
     }
+
+    //repository function to delete  notification
+    suspend fun deleteNotification(notificationId: String): Result<Notification> {
+        return try {
+            // Step 1: Fetch the notification first
+            val notification = supabase
+                .from("notifications")
+                .select{
+                    filter { eq("id", notificationId) }
+                }
+                .decodeSingle<Notification>()
+
+            supabase
+                .from("notifications")
+                .delete {
+                    filter { eq("id", notificationId) }
+                }
+
+            // Step 3: Return the deleted notification
+            Result.success(notification)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun sendFcmNotification(userId: String): Result<Boolean>{
+        return try {
+            val url = "https://zfaubbhaecfoxausjaax.supabase.co/functions/v1/welcome-notification"
+
+            val json = JSONObject().apply {
+                put("userId", userId)
+            }
+
+            val client = OkHttpClient.Builder()
+                .callTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+
+            val mediaType = "application/json".toMediaType()
+            val requestBody = json.toString().toRequestBody(mediaType)
+
+            val request = Request.Builder()
+                .url(url)
+                .addHeader("apikey", BuildConfig.ANON_KEY)
+                .addHeader("Authorization", "Bearer ${BuildConfig.ANON_KEY}")
+                .addHeader("Content-Type", "application/json")
+                .post(requestBody)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val responseBody = response.body.string()
+
+                Log.e("NotificationRepo", "response is $response")
+
+
+                if (!response.isSuccessful) {
+                    Log.e("NotificationRepo", "sendFcmNotification failed: ${response.code} → $responseBody")
+                    return Result.failure(Exception("Supabase function failed: ${response.code}"))
+                }
+
+                Log.d("NotificationRepo", "sendFcmNotification success: $responseBody")
+                return Result.success(true)
+            }
+
+        }catch (e: Exception){
+            Log.e("NotificationRepo", "Error sending FCM notification", e)
+            Result.failure(e)
+        }
+    }
 }
+
+//val deleted = supabase.from("contacts")
+//    .delete {
+//        filter { eq("id", contactId) }
+//        select() }
+//    .decodeSingle<Contact>()

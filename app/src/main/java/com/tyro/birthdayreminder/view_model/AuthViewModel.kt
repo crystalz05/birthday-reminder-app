@@ -62,6 +62,7 @@ class AuthViewModel @Inject constructor(
     init {
         fetchCurrentUser()
     }
+
     fun registerUser(fullName: String, email: String, password: String){
         _authState.update { AuthState.Loading }
 
@@ -85,6 +86,10 @@ class AuthViewModel @Inject constructor(
                 _uiEvent.send(UiEvent.ShowSnackBar(e.message.toString()))
             }
         }
+    }
+
+    fun checkIfUserExist(){
+
     }
 
     fun verifyUserAccount(password: String){
@@ -295,16 +300,18 @@ class AuthViewModel @Inject constructor(
     }
 
     fun fetchCurrentUser(){
-        val user = authRepository.currentUser()
-        _authState.update {
-            when {
-                user == null -> AuthState.LoggedOut
-                user.isEmailVerified -> {
-                    _email.update { user.email }
-                    loadProfilePhoto()
-                    AuthState.Verified(user)
+        viewModelScope.launch {
+            val user = authRepository.currentUser()
+            _authState.update {
+                when {
+                    user == null -> AuthState.LoggedOut
+                    user.isEmailVerified -> {
+                        _email.update { user.email }
+                        loadProfilePhoto()
+                        AuthState.Verified(user)
+                    }
+                    else -> AuthState.Unverified(user)
                 }
-                else -> AuthState.Unverified(user)
             }
         }
     }
@@ -333,6 +340,13 @@ class AuthViewModel @Inject constructor(
                     _authState.update { AuthState.Idle }
                 }
             }
+        }
+    }
+
+    fun checkAccountStillLoggedIn(context: Context){
+        val uid = authRepository.getUid()
+        if(uid.isNullOrEmpty()){
+            signOut(context)
         }
     }
 

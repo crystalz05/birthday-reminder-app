@@ -14,17 +14,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
@@ -37,12 +41,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -55,12 +63,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.navigation.Screen
@@ -86,19 +97,21 @@ fun NotificationScreen(
     var activeTab by remember { mutableStateOf("All") }
     val tabs = listOf("All", "Unread")
 
-    val uiState by notificationViewModel.notificationUiState.collectAsState()
+//    val uiState by notificationViewModel.notificationUiState.collectAsState()
 
-    LaunchedEffect(Unit) {
+    val uiState by notificationViewModel.notificationUiState.collectAsStateWithLifecycle()
+
+    val rawNotifications by notificationViewModel.notifications.collectAsState()
+
+    val notifications = rawNotifications.sortedByDescending {  it.sent_at }
+
+    LaunchedEffect(notifications) {
         notificationViewModel.getNotifications()
     }
 
-    LaunchedEffect(Unit) {
-        notificationViewModel.observeRealtimeNotifications()
-    }
+    val haptic = LocalHapticFeedback.current
+    var hasVibrated by remember { mutableStateOf(false) }
 
-    val notifications = uiState.notifications
-
-    Log.d("Notification Screen", notifications.toString())
 
     Scaffold(
         topBar = {
@@ -143,25 +156,87 @@ fun NotificationScreen(
     ) { innerPadding ->
 
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                tabs.forEach { tab ->
-                    NotificationTabItem(
-                        textContent = tab,
-                        active = activeTab == tab,
-                        onClicked = {activeTab = tab}
-                    )
-                }
-            }
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+//                tabs.forEach { tab ->
+//                    NotificationTabItem(
+//                        textContent = tab,
+//                        active = activeTab == tab,
+//                        onClicked = {activeTab = tab}
+//                    )
+//                }
+//            }
             Spacer(Modifier.height(16.dp))
             LazyColumn(modifier = Modifier.weight(1f)) {
 
-                items(notifications){ notification ->
-                    NotificationItem(
-                        R.mipmap.ic_launcher_foreground,
-                        notification.title,
-                        notification.body,
-                        notification.sent_at
+                items(
+                    items = notifications,
+                    key = {it.id}
+                ){ notification ->
+
+                    val swipeToDismissBoxState  = rememberSwipeToDismissBoxState(
+                        confirmValueChange = {value ->
+                            when(value){
+                                SwipeToDismissBoxValue.StartToEnd ->
+                                    {notificationViewModel.deleteNotification(notification.id)
+                                    true }
+                                SwipeToDismissBoxValue.EndToStart ->  false
+                                else -> false
+                            }
+                        },
+                        positionalThreshold = { it * 0.8f }
                     )
+
+                    LaunchedEffect(swipeToDismissBoxState.progress) {
+                        val progress = swipeToDismissBoxState.progress
+
+                        if (progress > 0.5f && !hasVibrated) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            hasVibrated = true
+                        }
+
+                        if (progress < 0.5f) {
+                            hasVibrated = false // reset so it can trigger again on next swipe
+                        }
+                    }
+
+                    SwipeToDismissBox(
+                        state = swipeToDismissBoxState,
+                        modifier = Modifier.fillMaxSize(),
+                        backgroundContent = {
+                            when(swipeToDismissBoxState.dismissDirection){
+                                SwipeToDismissBoxValue.StartToEnd -> {
+                                    Row(modifier = Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Delete,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .wrapContentSize(Alignment.CenterStart)
+                                                .padding(12.dp),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                        Text("Deleting..", color = MaterialTheme.colorScheme.error)
+                                    }
+                                }
+                                else -> {}
+                            }
+                        }
+                    ) {
+                        NotificationItem(
+                            R.mipmap.ic_launcher_foreground,
+                            notification.title,
+                            notification.body,
+                            notification.sent_at
+                        )
+                    }
+
+//                    NotificationItem(
+//                        R.mipmap.ic_launcher_foreground,
+//                        notification.title,
+//                        notification.body,
+//                        notification.sent_at,
+//                        deleteNotification = {
+//                            notificationViewModel.deleteNotification(notification.id)
+//                        }
+//                    )
                     Spacer(Modifier.height(16.dp))
 
                 }
@@ -203,13 +278,9 @@ fun NotificationItem(icon: Int, title: String, message: String, date: String){
 @Composable
 fun NotificationTabItem(textContent: String, active: Boolean, onClicked:()->Unit){
 
-    val bgColor = if(active){
-        MaterialTheme.colorScheme.surfaceTint .copy(0.3f)
-    }else{
-        MaterialTheme.colorScheme.surfaceContainerHighest
-    }
+    val bgColor = MaterialTheme.colorScheme.surfaceTint .copy(0.3f)
     val textColor = if(active){
-        MaterialTheme.colorScheme.surfaceTint
+        MaterialTheme.colorScheme.onSurface
     }else{
         MaterialTheme.colorScheme.onSurface
     }

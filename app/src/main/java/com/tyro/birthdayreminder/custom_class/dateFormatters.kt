@@ -125,8 +125,11 @@ fun getDayOfYear(dateStr: String): Int {
 fun getWeekOfMonth(dateStr: String): Int {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val date = LocalDate.parse(dateStr, formatter)
+
+    val currentYearDate = date.withYear(LocalDate.now().year)
+
     val weekFields = WeekFields.of(Locale.getDefault())
-    return date.get(weekFields.weekOfMonth())
+    return currentYearDate.get(weekFields.weekOfMonth())
 }
 
 

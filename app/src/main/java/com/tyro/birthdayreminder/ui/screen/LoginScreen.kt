@@ -74,6 +74,7 @@ import kotlinx.coroutines.launch
 
 
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import kotlinx.coroutines.delay
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +92,12 @@ fun LoginScreen(navHostController: NavHostController,
     val context = LocalContext.current
     val activity = context as? Activity
 
-
+    LaunchedEffect(Unit) {
+        when(authState){
+            is AuthState.Verified -> navHostController.navigate(Screen.Home.route)
+            else -> Unit
+        }
+    }
 
     LaunchedEffect(Unit) {
         launch {

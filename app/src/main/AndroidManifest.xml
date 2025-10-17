@@ -27,6 +27,9 @@
 
         </service>
 
+        <receiver android:name=".services.ReminderReceiver"
+            android:exported="false"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

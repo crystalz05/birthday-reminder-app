@@ -76,7 +76,7 @@ fun AccountEmailVerificationScreen(
             when(event) {
                 is UiEvent.ShowSnackBar -> snackBarHostState.showSnackbar(event.message)
                 is UiEvent.Navigate -> navHostController.navigate(event.route){
-                    popUpTo(Screen.EmailVerification.route) {inclusive = true}
+                    popUpTo(0) {inclusive = true}
                 }
                 else -> Unit
             }

@@ -82,6 +82,7 @@ import android.util.Log
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import com.tyro.birthdayreminder.ui.screen.add_birthday_components.GenderDropdownMenu
+import java.util.TimeZone
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,6 +120,7 @@ fun EditBirthdayFirstPage(
         if (showDatePicker) {
             val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val selectedDateMillis = try {
+                formatter.timeZone = TimeZone.getTimeZone("UTC")
                 formatter.parse(formState.birthday)?.time
             } catch (e: Exception) {
                 null
@@ -311,7 +313,6 @@ fun EditBirthdayFirstPage(
                                         onClick = {
                                             contactFormViewModel.onRelationshipChange(option)
                                             expanded = false
-
                                         })
                                     }
                                 }
@@ -369,11 +370,8 @@ fun EditBirthdayFirstPage(
                         }
                     }
                 )
-
             }
-
         }
     }
-
 }
 

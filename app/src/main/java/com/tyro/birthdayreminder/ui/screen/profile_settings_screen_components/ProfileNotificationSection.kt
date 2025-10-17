@@ -1,5 +1,7 @@
 package com.tyro.birthdayreminder.ui.screen.profile_settings_screen_components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,14 +34,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.tyro.birthdayreminder.view_model.AlarmViewModel
+import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ProfileNotificationSection(){
+fun ProfileNotificationSection(
+    alarmViewModel: AlarmViewModel = hiltViewModel(),
+    contactViewModel: BirthdayContactViewModel = hiltViewModel()
+){
 
     var pushNotificationActive by remember { mutableStateOf(false) }
-    var soundNotificationActive by remember { mutableStateOf(false) }
-    var vibrateNotificationActive by remember { mutableStateOf(false) }
+    var alarmActive by remember { mutableStateOf(false) }
     var emailNotificationActive by remember { mutableStateOf(false) }
+
+    val alarmState by alarmViewModel.alarmState.collectAsState()
+    val contacts by contactViewModel.contacts.collectAsState()
 
 
     Spacer(modifier = Modifier.height(12.dp))
@@ -61,10 +73,10 @@ fun ProfileNotificationSection(){
                 )
                 HorizontalDivider(thickness = 1.dp)
                 SettingSwitchItem(
-                    settingName = "Sound",
-                    settingDescription = "Play notification sound",
-                    active = soundNotificationActive,
-                    onChange = {soundNotificationActive = it}
+                    settingName = "Turn on alarm",
+                    settingDescription = "Turn on alarm",
+                    active = alarmState,
+                    onChange = {alarmViewModel.toggleAlarmState(it, contacts)}
                 )
                 HorizontalDivider(thickness = 1.dp)
                 SettingSwitchItem(

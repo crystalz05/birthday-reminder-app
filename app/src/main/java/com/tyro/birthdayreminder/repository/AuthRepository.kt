@@ -57,6 +57,7 @@ class AuthRepository @Inject constructor(
                 uid = firebaseUser.uid,
                 email = firebaseUser.email?: email,
                 fullName = fullName,
+                newUser = true
             )
 
             fireStore.collection("users")
@@ -70,6 +71,7 @@ class AuthRepository @Inject constructor(
             Result.failure(Exception(mapAuthError(e)))
         }
     }
+
 
     suspend fun verifyUserAccount(password: String): Result<Boolean> {
         return try {

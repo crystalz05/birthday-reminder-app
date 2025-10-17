@@ -33,6 +33,8 @@ android {
 //            .getProperty("WEB_CLIENT_ID") ?: ""
         buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID")}\"")
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY")}\"")
+        buildConfigField("String", "ANON_KEY", "\"${localProperties.getProperty("ANON_KEY")}\"")
+
 
     }
 
@@ -120,6 +122,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:realtime-kt:3.2.3")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:3.2.3")
     implementation("io.ktor:ktor-client-android:3.2.3")
+    implementation("io.ktor:ktor-client-okhttp:3.2.3")
+    implementation("io.ktor:ktor-client-websockets:3.2.3")
 
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
     implementation("io.coil-kt.coil3:coil-gif:3.3.0")
@@ -136,5 +140,9 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14")
+
+    //work manager
+    implementation ("androidx.work:work-runtime-ktx:2.10.5")
+
 
 }

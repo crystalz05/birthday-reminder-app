@@ -66,6 +66,7 @@ fun ProfilePhotoSection_2(
 
     val imageUrl by authViewModel.imageUrl.collectAsState()
     val name by authViewModel.fullName.collectAsState()
+    val email by authViewModel.email.collectAsState()
 
     Card(modifier = Modifier.shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp), clip = false)
         .background(color = MaterialTheme.colorScheme.surface,
@@ -98,10 +99,13 @@ fun ProfilePhotoSection_2(
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Normal)
-                    Text("mikebingp@gmail.com",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                        fontWeight = FontWeight.Normal)
+                    email?.let {
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                            fontWeight = FontWeight.Normal)
+                    }
                 }
             }
         }

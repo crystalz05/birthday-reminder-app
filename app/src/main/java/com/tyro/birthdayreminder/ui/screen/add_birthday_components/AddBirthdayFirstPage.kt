@@ -68,6 +68,7 @@ import com.tyro.birthdayreminder.view_model.ContactFormViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,6 +110,7 @@ fun AddBirthdayFirstPage(
 
             val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val selectedDateMillis = try {
+                formatter.timeZone = TimeZone.getTimeZone("UTC")
                 formatter.parse(formState.birthday)?.time
             } catch (e: Exception) {
                 null

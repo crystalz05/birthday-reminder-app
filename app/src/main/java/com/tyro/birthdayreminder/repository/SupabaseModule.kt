@@ -10,6 +10,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
+import io.ktor.client.engine.okhttp.OkHttp
 import javax.inject.Singleton
 
 @Module
@@ -27,6 +28,7 @@ object SupabaseModule {
             install(Postgrest)
             install(Storage)
             install(Realtime)
+            httpEngine = OkHttp.create()
         }
     }
 }

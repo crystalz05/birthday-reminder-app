@@ -1,20 +1,17 @@
 package com.tyro.birthdayreminder.view_model
 
 import android.app.Application
-import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tyro.birthdayreminder.custom_class.ThemeMode
-import com.tyro.birthdayreminder.data_store.ThemeDataStore
-import com.tyro.birthdayreminder.data_store.dataStore
+import com.tyro.birthdayreminder.data_store.AppSettingsDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ThemeViewModel(application: Application): AndroidViewModel(application) {
 
-    private val themeDataStore = ThemeDataStore(application)
+    private val themeDataStore = AppSettingsDataStore(application)
 
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode

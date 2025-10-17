@@ -22,7 +22,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.AccountBox
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Home
@@ -32,6 +34,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -82,6 +86,7 @@ import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
 import com.tyro.birthdayreminder.view_model.ContactFormViewModel
+import com.tyro.birthdayreminder.view_model.NotificationViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -96,7 +101,13 @@ fun HomeScreen(
     contactFormViewModel: ContactFormViewModel,
     birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel(),
     connectivityViewModel: ConnectivityViewModel = hiltViewModel(),
+    notificationViewModel: NotificationViewModel = hiltViewModel()
 ) {
+
+
+    LaunchedEffect(Unit) {
+        notificationViewModel.sendWelcomeNotification()
+    }
 
     contactFormViewModel.resetForm()
     val contactOperationState by birthdayContactViewModel.contactOperationState.collectAsState()
