@@ -6,16 +6,13 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tyro.birthdayreminder.auth.NotificationUiState
-import com.tyro.birthdayreminder.auth.UiEvent
 import com.tyro.birthdayreminder.entity.Notification
 import com.tyro.birthdayreminder.repository.AuthRepository
 import com.tyro.birthdayreminder.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,11 +29,6 @@ class NotificationViewModel @Inject constructor(
 
     private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
     val notifications: StateFlow<List<Notification>> = _notifications
-
-    init {
-        getNotifications()
-        observeRealtimeNotifications()
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getNotifications(){
@@ -68,6 +60,8 @@ class NotificationViewModel @Inject constructor(
             // ✅ pass viewModelScope to keep channel active as long as ViewModel is alive
             notificationRepository.observeNewNotifications(userId, viewModelScope)
                 .collect { newNotification ->
+
+                    Log.d("Notification view model", newNotification.toString())
                     _notifications.update {currentState ->  buildList {
                         add(newNotification)
                         addAll(currentState)

@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidedValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -39,6 +40,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.ThemeMode
+import com.tyro.birthdayreminder.custom_class.setStatusBarIconColor
 import com.tyro.birthdayreminder.navigation.Navigation
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
@@ -55,6 +57,7 @@ import com.tyro.birthdayreminder.ui.screen.ProfileSettingScreen
 import com.tyro.birthdayreminder.ui.screen.SignupScreen
 import com.tyro.birthdayreminder.ui.screen.StatsScreen
 import com.tyro.birthdayreminder.ui.theme.BirthdayReminderTheme
+import com.tyro.birthdayreminder.view_model.AppSettingsViewModel
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
@@ -72,6 +75,7 @@ class MainActivity : ComponentActivity() {
     private val connectivityViewModel: ConnectivityViewModel by viewModels()
     private val contactFormViewModel: ContactFormViewModel by viewModels()
     private val notificationViewModel: NotificationViewModel by viewModels()
+    private val appSettingsViewModel: AppSettingsViewModel by viewModels()
 
     @OptIn(ExperimentalMaterial3Api::class)
     @RequiresApi(Build.VERSION_CODES.O)
@@ -97,6 +101,11 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.SYSTEM -> isSystemDark
             }
 
+            SideEffect {
+                setStatusBarIconColor(activity = this, darkIcons = !isDark)
+            }
+
+
             CompositionLocalProvider() {
                 BirthdayReminderTheme(darkTheme = isDark) {
 //                HomeScreen()
@@ -119,7 +128,8 @@ class MainActivity : ComponentActivity() {
                         connectivityViewModel = connectivityViewModel,
                         contactFormViewModel = contactFormViewModel,
                         notificationViewModel = notificationViewModel,
-                        startDestination = startDestination
+                        startDestination = startDestination,
+                        appSettingsViewModel = appSettingsViewModel
                     )
 //                NotificationScreen(navHostController = rememberNavController())
 //                CalendarScreen(navHostController = rememberNavController())

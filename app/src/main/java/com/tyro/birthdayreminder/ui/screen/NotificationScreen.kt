@@ -94,19 +94,17 @@ fun NotificationScreen(
     notificationViewModel: NotificationViewModel
 ) {
 
-    var activeTab by remember { mutableStateOf("All") }
-    val tabs = listOf("All", "Unread")
-
-//    val uiState by notificationViewModel.notificationUiState.collectAsState()
-
-    val uiState by notificationViewModel.notificationUiState.collectAsStateWithLifecycle()
-
     val rawNotifications by notificationViewModel.notifications.collectAsState()
 
     val notifications = rawNotifications.sortedByDescending {  it.sent_at }
 
-    LaunchedEffect(notifications) {
+    LaunchedEffect(Unit) {
         notificationViewModel.getNotifications()
+        notificationViewModel.observeRealtimeNotifications()
+    }
+
+    LaunchedEffect(rawNotifications) {
+        Log.d("Notification Screen", rawNotifications.toString())
     }
 
     val haptic = LocalHapticFeedback.current
@@ -156,15 +154,7 @@ fun NotificationScreen(
     ) { innerPadding ->
 
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
-//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-//                tabs.forEach { tab ->
-//                    NotificationTabItem(
-//                        textContent = tab,
-//                        active = activeTab == tab,
-//                        onClicked = {activeTab = tab}
-//                    )
-//                }
-//            }
+
             Spacer(Modifier.height(16.dp))
             LazyColumn(modifier = Modifier.weight(1f)) {
 
@@ -228,15 +218,6 @@ fun NotificationScreen(
                         )
                     }
 
-//                    NotificationItem(
-//                        R.mipmap.ic_launcher_foreground,
-//                        notification.title,
-//                        notification.body,
-//                        notification.sent_at,
-//                        deleteNotification = {
-//                            notificationViewModel.deleteNotification(notification.id)
-//                        }
-//                    )
                     Spacer(Modifier.height(16.dp))
 
                 }
@@ -272,28 +253,5 @@ fun NotificationItem(icon: Int, title: String, message: String, date: String){
                 }
             }
         }
-    )
-}
-
-@Composable
-fun NotificationTabItem(textContent: String, active: Boolean, onClicked:()->Unit){
-
-    val bgColor = MaterialTheme.colorScheme.surfaceTint .copy(0.3f)
-    val textColor = if(active){
-        MaterialTheme.colorScheme.onSurface
-    }else{
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    val border = if(active){
-        BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceTint)
-    }else null
-
-    Text(textContent, modifier = Modifier
-        .clickable { onClicked() }
-        .background(color = bgColor, shape = RoundedCornerShape(100))
-        .then(if(border != null) Modifier.border(shape = RoundedCornerShape(100), border = border) else Modifier)
-        .padding(horizontal = 32.dp, vertical = 4.dp),
-        color = textColor
     )
 }

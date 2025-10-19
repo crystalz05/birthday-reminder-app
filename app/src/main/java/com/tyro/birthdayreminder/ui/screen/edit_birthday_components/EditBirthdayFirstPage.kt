@@ -261,6 +261,7 @@ fun EditBirthdayFirstPage(
                                             tint = MaterialTheme.colorScheme.primary) },
                                         value = formState.birthday,
                                         onValueChange = {},
+                                        label = { Text("Birth date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                         placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                         enabled = false,
                                         singleLine = true,

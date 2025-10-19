@@ -1,6 +1,8 @@
 package com.tyro.birthdayreminder.ui.screen
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.tyro.birthdayreminder.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,6 +71,7 @@ import com.tyro.birthdayreminder.view_model.ThemeViewModel
 import io.ktor.util.collections.getValue
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSettingScreen(

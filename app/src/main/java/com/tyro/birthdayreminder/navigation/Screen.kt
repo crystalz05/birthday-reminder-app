@@ -23,4 +23,5 @@ sealed class Screen(val route: String) {
     object ContactList: Screen("contact_list/{listType}"){
         fun passListType(listType: String?) = "contact_list/$listType"
     }
+    object Onboarding: Screen("onboarding_screen")
 }

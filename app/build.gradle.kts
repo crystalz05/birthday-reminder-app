@@ -144,5 +144,15 @@ dependencies {
     //work manager
     implementation ("androidx.work:work-runtime-ktx:2.10.5")
 
+    //ui status bar correction
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
+
+    implementation("com.google.accompanist:accompanist-pager:0.34.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.34.0")
+
+
+    //adding lottie
+    implementation ("com.airbnb.android:lottie-compose:6.3.0")
+
 
 }

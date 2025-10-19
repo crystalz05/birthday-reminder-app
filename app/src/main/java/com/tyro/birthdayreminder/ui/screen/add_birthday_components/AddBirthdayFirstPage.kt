@@ -251,6 +251,7 @@ fun AddBirthdayFirstPage(
                                     tint = MaterialTheme.colorScheme.primary) },
                                 value = formState.birthday,
                                 onValueChange = {},
+                                label = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                 placeholder = { Text("Birth Date", color = MaterialTheme.colorScheme.onSurface.copy(0.2f)) },
                                 enabled = false,
                                 singleLine = true,
@@ -304,7 +305,6 @@ fun AddBirthdayFirstPage(
                                 onClick = {
                                     contactFormViewModel.onRelationshipChange(option)
                                     expanded = false
-
                                 })
                             }
                         }
@@ -320,9 +320,7 @@ fun AddBirthdayFirstPage(
             elevation = CardDefaults.cardElevation(1.dp),
 
             content = {
-
                 Column(modifier = Modifier
-//                        .border(width = 1.dp, color = MaterialTheme.colorScheme.surfaceContainer)
                     .background(color = MaterialTheme.colorScheme.surface)
                     .padding(16.dp)) {
                     Row(
@@ -399,7 +397,6 @@ fun GenderDropdownMenu(
             shape = RoundedCornerShape(0.dp),
             modifier = Modifier.menuAnchor() // Required for dropdown positioning
         )
-
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }

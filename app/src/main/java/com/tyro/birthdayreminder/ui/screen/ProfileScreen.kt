@@ -131,23 +131,6 @@ fun ProfileScreen(
         Box(modifier = Modifier.fillMaxSize()){
             Column {
                 ProfilePhotoSection(navHostController, authViewModel)
-//                Spacer(Modifier.height(16.dp))
-//                Button(
-//                    onClick = {
-//                        navHostController.navigate(Screen.AccountVerification.route)
-//                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-//                    },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    shape = RoundedCornerShape(8.dp),
-//                    border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.primary)
-//                ) {
-//                    Icon(
-//                        imageVector = Icons.Default.Delete,
-//                        contentDescription = null,
-//                    )
-//                    Spacer(Modifier.width(8.dp))
-//                    Text("Edit Profile", style = MaterialTheme.typography.titleMedium)
-//                }
             }
             OutlinedButton(
                 onClick = {

@@ -1,5 +1,6 @@
 package com.tyro.birthdayreminder.ui.screen
 
+import android.app.Activity
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -67,21 +68,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.tyro.birthdayreminder.R
 import com.tyro.birthdayreminder.auth.AuthState
 import com.tyro.birthdayreminder.auth.ContactOperationState
 import com.tyro.birthdayreminder.auth.UiEvent
+import com.tyro.birthdayreminder.custom_class.DoubleBackToExitHandler
+import com.tyro.birthdayreminder.custom_class.DoubleBackToExitWithSnackbar
 import com.tyro.birthdayreminder.custom_class.Loading
 import com.tyro.birthdayreminder.custom_class.PullToRefreshCustomStyle
 import com.tyro.birthdayreminder.custom_class.connection_manager.ConnectivityObserver
 import com.tyro.birthdayreminder.custom_class.getTimeOfDay
+import com.tyro.birthdayreminder.data_store.AppSettingsDataStore
 import com.tyro.birthdayreminder.navigation.Screen
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.OptionsCard
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.SearchInterface
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.TodayBirthday
 import com.tyro.birthdayreminder.ui.screen.home_screen_items.UpComingBirthdays
+import com.tyro.birthdayreminder.view_model.AppSettingsViewModel
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
@@ -99,14 +105,20 @@ fun HomeScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     contactFormViewModel: ContactFormViewModel,
+    appSettingsViewModel: AppSettingsViewModel,
     birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel(),
     connectivityViewModel: ConnectivityViewModel = hiltViewModel(),
-    notificationViewModel: NotificationViewModel = hiltViewModel()
-) {
+    notificationViewModel: NotificationViewModel = hiltViewModel(),
+    ) {
 
+    val context = LocalContext.current
+    val isCompleted by appSettingsViewModel.isOnboardingCompleted.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         notificationViewModel.sendWelcomeNotification()
+        if (!isCompleted) {
+            navController.navigate(Screen.Onboarding.route)
+        }
     }
 
     contactFormViewModel.resetForm()
@@ -296,6 +308,8 @@ fun HomeScreen(
             }
         },
         content = { innerPadding ->
+
+            DoubleBackToExitHandler(onExit = {(context as? Activity)?.finish() })
 
             Box(modifier = Modifier.fillMaxSize(), Alignment.Center){
 

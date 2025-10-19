@@ -72,7 +72,7 @@ import kotlin.random.Random
 @Composable
 fun StatsScreen(
     navHostController: NavHostController,
-    birthdayContactViewModel: BirthdayContactViewModel = hiltViewModel()
+    birthdayContactViewModel: BirthdayContactViewModel
 ) {
 
     var birthdayDistributionexpanded by remember { mutableStateOf(false) }

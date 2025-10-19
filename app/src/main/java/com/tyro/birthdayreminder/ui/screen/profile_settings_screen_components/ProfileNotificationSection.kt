@@ -45,9 +45,7 @@ fun ProfileNotificationSection(
     contactViewModel: BirthdayContactViewModel = hiltViewModel()
 ){
 
-    var pushNotificationActive by remember { mutableStateOf(false) }
     var alarmActive by remember { mutableStateOf(false) }
-    var emailNotificationActive by remember { mutableStateOf(false) }
 
     val alarmState by alarmViewModel.alarmState.collectAsState()
     val contacts by contactViewModel.contacts.collectAsState()
@@ -66,24 +64,10 @@ fun ProfileNotificationSection(
                 .background(color = MaterialTheme.colorScheme.surface),
             ) {
                 SettingSwitchItem(
-                    settingName = "Push Notification",
-                    settingDescription = "Receive birthday reminder",
-                    active = pushNotificationActive,
-                    onChange = {pushNotificationActive = it}
-                )
-                HorizontalDivider(thickness = 1.dp)
-                SettingSwitchItem(
-                    settingName = "Turn on alarm",
-                    settingDescription = "Turn on alarm",
+                    settingName = "Turn on local notification",
+                    settingDescription = "Turn on local notification",
                     active = alarmState,
                     onChange = {alarmViewModel.toggleAlarmState(it, contacts)}
-                )
-                HorizontalDivider(thickness = 1.dp)
-                SettingSwitchItem(
-                    settingName = "Email Notification",
-                    settingDescription = "Receive email reminder",
-                    active = emailNotificationActive,
-                    onChange = {emailNotificationActive = it}
                 )
             }
         }

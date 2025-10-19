@@ -3,9 +3,7 @@ package com.tyro.birthdayreminder.repository
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.google.firebase.auth.FirebaseAuth
 import com.tyro.birthdayreminder.BuildConfig
-import com.tyro.birthdayreminder.entity.Contact
 import com.tyro.birthdayreminder.entity.Notification
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -15,11 +13,9 @@ import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
@@ -30,7 +26,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -71,49 +66,91 @@ class NotificationRepository @Inject constructor(
     private var channel: RealtimeChannel? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun observeNewNotifications(userId: String, scope: CoroutineScope): Flow<Notification> {
-        channel = supabase.channel("notifications-channel")  // Fixed: No "realtime:" prefix
+    fun observeNewNotifications(userId: String, viewModelScope: CoroutineScope): Flow<Notification> {
+        if (channel == null) {
+            channel = supabase.channel("notifications-channel")
+        }
 
-        scope.launch {
+        viewModelScope.launch {
             try {
                 channel?.subscribe()
             } catch (e: Exception) {
             }
         }
 
-        return channel!!.postgresChangeFlow<PostgresAction>(schema = "public") {
+        return channel!!.postgresChangeFlow<PostgresAction>(
+            schema = "public"
+        ) {
             table = "notifications"
         }
             .filter { it is PostgresAction.Insert }
             .mapNotNull { it as? PostgresAction.Insert }
             .mapNotNull { change ->
-                val record = change.record as? JsonObject ?: run {
-                    return@mapNotNull null
-                }
-                val recordUserId = record["user_id"]?.jsonPrimitive?.content ?: run {
-                    return@mapNotNull null
-                }
-                if (recordUserId != userId) {
-                    return@mapNotNull null
-                }
+                val record = change.record as? JsonObject ?: return@mapNotNull null
+                val recordUserId = record["user_id"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                if (recordUserId != userId) return@mapNotNull null
 
                 val rawSentAt = record["sent_at"]?.jsonPrimitive?.content ?: ""
                 val zoned = LocalDateTime.parse(rawSentAt).plusHours(1)
                 val formattedDatetime = zoned.format(DateTimeFormatter.ofPattern("MMM d, yyyy • HH:mm"))
 
-                val notification = Notification(
+                Notification(
                     id = record["id"]?.jsonPrimitive?.content ?: "",
                     title = record["title"]?.jsonPrimitive?.content ?: "",
                     body = record["body"]?.jsonPrimitive?.content ?: "",
-                    sent_at = formattedDatetime,  // Fixed: Format consistently
+                    sent_at = formattedDatetime,
                     user_id = recordUserId,
                     contact_id = record["contact_id"]?.jsonPrimitive?.content ?: ""
-                )
-                Log.d(TAG, "observeNewNotifications: Mapped new notification: id=${notification.id}, title=${notification.title}")
-
-                notification
+                ).also {
+                    Log.d(TAG, "observeNewNotifications: New notification: ${it.title}")
+                }
             }
     }
+
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    fun observeNewNotifications(userId: String, scope: CoroutineScope): Flow<Notification> {
+//        channel = supabase.channel("notifications-channel")  // Fixed: No "realtime:" prefix
+//
+//        scope.launch {
+//            try {
+//                channel?.subscribe()
+//            } catch (e: Exception) {
+//            }
+//        }
+//
+//        return channel!!.postgresChangeFlow<PostgresAction>(schema = "public") {
+//            table = "notifications"
+//        }
+//            .filter { it is PostgresAction.Insert }
+//            .mapNotNull { it as? PostgresAction.Insert }
+//            .mapNotNull { change ->
+//                val record = change.record as? JsonObject ?: run {
+//                    return@mapNotNull null
+//                }
+//                val recordUserId = record["user_id"]?.jsonPrimitive?.content ?: run {
+//                    return@mapNotNull null
+//                }
+//                if (recordUserId != userId) {
+//                    return@mapNotNull null
+//                }
+//
+//                val rawSentAt = record["sent_at"]?.jsonPrimitive?.content ?: ""
+//                val zoned = LocalDateTime.parse(rawSentAt).plusHours(1)
+//                val formattedDatetime = zoned.format(DateTimeFormatter.ofPattern("MMM d, yyyy • HH:mm"))
+//
+//                val notification = Notification(
+//                    id = record["id"]?.jsonPrimitive?.content ?: "",
+//                    title = record["title"]?.jsonPrimitive?.content ?: "",
+//                    body = record["body"]?.jsonPrimitive?.content ?: "",
+//                    sent_at = formattedDatetime,  // Fixed: Format consistently
+//                    user_id = recordUserId,
+//                    contact_id = record["contact_id"]?.jsonPrimitive?.content ?: ""
+//                )
+//                Log.d(TAG, "observeNewNotifications: Mapped new notification: id=${notification.id}, title=${notification.title}")
+//
+//                notification
+//            }
+//    }
 
     suspend fun clearChannel() {
         Log.d(TAG, "clearChannel: Cleaning up realtime channel")

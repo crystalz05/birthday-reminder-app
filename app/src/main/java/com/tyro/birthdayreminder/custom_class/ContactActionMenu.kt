@@ -48,147 +48,172 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
+//@Composable
+//fun ContactActionMenu(
+//    onEditBirthday: () -> Unit,
+//    onRemovePhoto: () -> Unit,
+//    onDeleteContact: () -> Unit,
+//) {
+//    var expanded by remember { mutableStateOf(false) }
+//
+//    Box {
+//        IconButton(onClick = { expanded = true }) {
+//            Icon(
+//                imageVector = Icons.Default.MoreVert,
+//                contentDescription = "More options",
+//                tint = MaterialTheme.colorScheme.onSurface
+//            )
+//        }
+//        DropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { expanded = false },
+//            containerColor = Color.Transparent,
+//            shadowElevation = 0.dp,
+//
+//            ) {
+//            // Edit Birthday
+//            DropdownMenuItem(
+//                text = {
+//                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+//                        Icon(
+//                            imageVector = Icons.Default.Edit,
+//                            contentDescription = null,
+//                            tint = MaterialTheme.colorScheme.primary,
+//                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer)
+//                                .padding(8.dp)
+//                        )
+//                    }
+//                },
+//                onClick = {
+//                    expanded = false
+//                    onEditBirthday()
+//                }
+//            )
+//
+//            DropdownMenuItem(
+//                text = {
+//                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+//                        Icon(painter = painterResource(id = R.drawable.outline_frame_person_off_24),
+//                            tint = MaterialTheme.colorScheme.error,
+//                            contentDescription = null,
+//                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
+//                                .padding(8.dp)
+//                        )
+//                    }
+//                },
+//                onClick = {
+//                    expanded = false
+//                    onRemovePhoto()
+//                }
+//            )
+//
+//            DropdownMenuItem(
+//                text = {
+//                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+//                        Icon(imageVector = Icons.Default.Delete,
+//                            tint = MaterialTheme.colorScheme.error,
+//                            contentDescription = null,
+//                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
+//                                .padding(8.dp)
+//                        )
+//                    }
+//                },
+//                onClick = {
+//                    expanded = false
+//                    onDeleteContact()
+//                }
+//            )
+//        }
+//    }
+//}
+
 @Composable
 fun ContactActionMenu(
     onEditBirthday: () -> Unit,
     onRemovePhoto: () -> Unit,
     onDeleteContact: () -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var visible by remember { mutableStateOf(false) }
 
-    Box {
-        // Button or Icon to open the dropdown
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More options",
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = Color.Transparent,
-            shadowElevation = 0.dp,
+    Box(
+        contentAlignment = Alignment.TopEnd // keeps the menu positioned near the icon
+    ) {
 
-            ) {
-            // Edit Birthday
-            DropdownMenuItem(
-                text = {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+        Column {
+            IconButton(onClick = { visible = !visible }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More options",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            if (visible) {
+
+                Column(
+                    modifier = Modifier,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Edit birthday
+                    IconButton(onClick = {
+                        visible = false
+                        onEditBirthday()
+                    }) {
                         Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = null,
+                            Icons.Default.Edit,
+                            contentDescription = "Edit photo",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer)
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shape = CircleShape
+                                )
                                 .padding(8.dp)
                         )
                     }
-                },
-                onClick = {
-                    expanded = false
-                    onEditBirthday()
-                }
-            )
-
-            DropdownMenuItem(
-                text = {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-//                        Text("Remove Photo")
-                        Icon(painter = painterResource(id = R.drawable.outline_frame_person_off_24),
+                    // Remove photo
+                    IconButton(onClick = {
+                        visible = false
+                        onRemovePhoto()
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_frame_person_off_24),
+                            contentDescription = "Remove Photo",
                             tint = MaterialTheme.colorScheme.error,
-                            contentDescription = null,
-                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    shape = CircleShape
+                                )
                                 .padding(8.dp)
                         )
                     }
-                },
-                onClick = {
-                    expanded = false
-                    onRemovePhoto()
-                }
-            )
-
-            DropdownMenuItem(
-                text = {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-//                        Text("Remove Photo")
-                        Icon(imageVector = Icons.Default.Delete,
+                    // Remove photo
+                    IconButton(onClick = {
+                        visible = false
+                        onDeleteContact()
+                    }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete contact",
                             tint = MaterialTheme.colorScheme.error,
-                            contentDescription = null,
-                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    shape = CircleShape
+                                )
                                 .padding(8.dp)
                         )
                     }
-                },
-                onClick = {
-                    expanded = false
-                    onDeleteContact()
+
                 }
-            )
+
+            }
         }
     }
 }
 
-
-@Composable
-fun ProfileActionMenu_v2(
-    onRemovePhoto: () -> Unit,
-    onEditAccount: () -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More options",
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-//            containerColor = Color.Transparent,
-            shadowElevation = 0.dp,
-            modifier = Modifier.wrapContentWidth()
-
-        ) {
-            DropdownMenuItem(
-                text = {
-                    Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-                        Icon(painter = painterResource(id = R.drawable.outline_frame_person_off_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.errorContainer)
-                                .padding(8.dp)
-                        )
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    onRemovePhoto()
-                },
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-                        Icon(Icons.Default.Edit,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.background(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer)
-                                .padding(8.dp)
-                        )
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    onEditAccount()
-                },
-            )
-        }
-    }
-}
 
 @Composable
 fun ProfileActionMenu(

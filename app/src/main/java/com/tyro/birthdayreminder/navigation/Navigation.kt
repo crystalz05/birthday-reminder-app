@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tyro.birthdayreminder.auth.AuthState
+import com.tyro.birthdayreminder.data_store.AppSettingsDataStore
 import com.tyro.birthdayreminder.ui.screen.AccountEmailVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AccountVerificationScreen
 import com.tyro.birthdayreminder.ui.screen.AddBirthdayScreen
@@ -25,12 +26,14 @@ import com.tyro.birthdayreminder.ui.screen.EditBirthdayScreen
 import com.tyro.birthdayreminder.ui.screen.HomeScreen
 import com.tyro.birthdayreminder.ui.screen.LoginScreen
 import com.tyro.birthdayreminder.ui.screen.NotificationScreen
+import com.tyro.birthdayreminder.ui.screen.OnboardingScreen
 import com.tyro.birthdayreminder.ui.screen.ProfileEditScreen
 import com.tyro.birthdayreminder.ui.screen.ProfileScreen
 import com.tyro.birthdayreminder.ui.screen.ProfileSettingScreen
 import com.tyro.birthdayreminder.ui.screen.SignupScreen
 import com.tyro.birthdayreminder.ui.screen.SplashScreen
 import com.tyro.birthdayreminder.ui.screen.StatsScreen
+import com.tyro.birthdayreminder.view_model.AppSettingsViewModel
 import com.tyro.birthdayreminder.view_model.AuthViewModel
 import com.tyro.birthdayreminder.view_model.BirthdayContactViewModel
 import com.tyro.birthdayreminder.view_model.ConnectivityViewModel
@@ -48,8 +51,8 @@ fun Navigation(
     connectivityViewModel: ConnectivityViewModel,
     contactFormViewModel: ContactFormViewModel,
     notificationViewModel: NotificationViewModel,
-    startDestination: String = Screen.Splash.route
-
+    startDestination: String = Screen.Splash.route,
+    appSettingsViewModel: AppSettingsViewModel
 ) {
 
     NavHost(
@@ -72,7 +75,7 @@ fun Navigation(
             }
         }
         composable(Screen.Home.route){
-            HomeScreen(navHostController, authViewModel, contactFormViewModel)
+            HomeScreen(navHostController, authViewModel, contactFormViewModel, appSettingsViewModel)
         }
         composable(Screen.AddBirthDay.route) {
             AddBirthdayScreen(navHostController, contactFormViewModel)
@@ -96,7 +99,7 @@ fun Navigation(
             LoginScreen(navHostController, authViewModel)
         }
         composable(Screen.Stats.route){
-            StatsScreen(navHostController)
+            StatsScreen(navHostController, birthdayContactViewModel)
         }
         composable(Screen.Signup.route){
             SignupScreen(navHostController)
@@ -115,6 +118,16 @@ fun Navigation(
         }
         composable(Screen.EmailVerification.route){
             AccountEmailVerificationScreen(navHostController)
+        }
+        composable(Screen.Onboarding.route){
+            OnboardingScreen(
+                appSettingsViewModel = appSettingsViewModel,
+                onFinish = {
+                    navHostController.navigate(Screen.Home.route){
+                        popUpTo(Screen.Onboarding.route){inclusive = true}
+                    }
+                }
+            )
         }
 
         composable(Screen.ContactList.route,
